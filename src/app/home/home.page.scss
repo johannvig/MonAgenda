@@ -30,6 +30,17 @@
     --checkmark-color: white; --size: 22px; --border-radius: 6px; margin-right: 12px;
   }
 }
+    // Ensure checked/un-checked background works across Ionic versions by targeting native part
+    ::ng-deep ion-item.checked ion-checkbox::part(native) {
+      background: var(--fill) !important;
+      border-color: var(--border) !important;
+      box-shadow: none !important;
+    }
+    ::ng-deep ion-item:not(.checked) ion-checkbox::part(native) {
+      background: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: none !important;
+    }
 
 // 4. LAYOUT COLONNE GAUCHE (Fix hauteur min)
 .calendar-col {

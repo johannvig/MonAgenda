@@ -37,6 +37,7 @@
           <ion-datetime 
             presentation="date" 
             color="primary"
+            [value]="selectedDate"
             (ionChange)="changeDate($event)">
           </ion-datetime>
         </div>
@@ -50,9 +51,17 @@
           </div>
           
           <ion-list lines="none">
-            <ion-item *ngFor="let c of courses">
-              <ion-checkbox slot="start" mode="md" [(ngModel)]="c.checked" [color]="c.color"></ion-checkbox>
-              <ion-label>{{ c.name }}</ion-label>
+            <ion-item *ngFor="let c of courses" [class.checked]="c.checked" [ngStyle]="{'--fill': c.colorFill, '--border': c.colorBorder || '#cbd5e1', '--text-color': c.textColor || '#000000'}">
+              <ion-checkbox
+                slot="start"
+                mode="md"
+                [(ngModel)]="c.checked"
+                (ionChange)="onCourseToggle(c)"
+                [style.--checkmark-color]="'#ffffff'"
+                [style.--size]="'26px'"
+                [style.--border-radius]="'8px'">
+              </ion-checkbox>
+              <ion-label style="color: #1e3a8a;">{{ c.name }}</ion-label>
             </ion-item>
           </ion-list>
         </div>
