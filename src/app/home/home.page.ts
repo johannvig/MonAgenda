@@ -15,15 +15,15 @@ import { EventDetailComponent } from './event-detail.component';
 function getContrastTextColor(hexColor: string): string {
   // Remove # if present
   const hex = hexColor.replace('#', '');
-  
+
   // Convert hex to RGB
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
-  
+
   // Calculate luminance using relative luminance formula (WCAG)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
+
   // If luminance < 0.5, background is dark, use white text
   return luminance < 0.5 ? '#ffffff' : '#000000';
 }
@@ -42,17 +42,17 @@ export class HomePage {
   currentYear: number = 0;
   // Valeur sélectionnée pour l'`ion-datetime` (ISO string)
   selectedDate: string = new Date().toISOString();
-  
+
   // Mode daltonisme
   daltonismMode: boolean = false;
 
   // Définition des palettes de couleurs
   colors = {
-    blue:   { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a' }, 
-    green:  { bg: '#dcfce7', border: '#22c55e', text: '#14532d' }, 
-    yellow: { bg: '#fef9c3', border: '#facc15', text: '#854d0e' }, 
-    cyan:   { bg: '#cffafe', border: '#06b6d4', text: '#164e63' }, 
-    gray:   { bg: '#f3f4f6', border: '#9ca3af', text: '#374151' }  
+    blue:   { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a' },
+    green:  { bg: '#dcfce7', border: '#22c55e', text: '#14532d' },
+    yellow: { bg: '#fef9c3', border: '#facc15', text: '#854d0e' },
+    cyan:   { bg: '#cffafe', border: '#06b6d4', text: '#164e63' },
+    gray:   { bg: '#f3f4f6', border: '#9ca3af', text: '#374151' }
   };
 
   // Palettes daltonisme (protanopie, deutéranopie, tritanopie)
@@ -70,22 +70,22 @@ export class HomePage {
     locale: frLocale,
     headerToolbar: false,
     weekends: false,
-    initialDate: '2025-11-24', 
-    
+    initialDate: '2025-11-24',
+
     // --- HORAIRES & TAILLE ---
     slotMinTime: '08:00:00',
     slotMaxTime: '18:00:00',
-    slotDuration: '00:15:00', 
-    slotLabelInterval: '01:00', 
+    slotDuration: '00:15:00',
+    slotLabelInterval: '01:00',
     allDaySlot: false,
     nowIndicator: true,
 
-    aspectRatio: 1.5, 
-    
+    aspectRatio: 1.5,
+
     height: '90%',        // Force le calendrier à respecter la hauteur du parent
     contentHeight: 'auto',
     expandRows: false,
-    displayEventTime: false, 
+    displayEventTime: false,
 
     slotLabelFormat: {
       hour: '2-digit', minute: '2-digit', omitZeroMinute: false, meridiem: false
@@ -112,7 +112,7 @@ export class HomePage {
     // --- DESIGN DES COURS ---
     eventContent: (arg) => {
       const event = arg.event;
-      
+
       let myTimeText = '';
       if (event.start && event.end) {
         const formatOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
@@ -131,7 +131,7 @@ export class HomePage {
       }
 
       let detailsHtml = '';
-      
+
       if (durationMinutes <= 60) {
         // Mode compact
         if(room && teacher) {
@@ -343,14 +343,14 @@ export class HomePage {
       const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
       return (palette as any)[colorKey];
     }
-    
+
     // Si daltonisme OFF: utiliser couleur perso si elle existe
     if (this.customCourseColors.has(courseName)) {
       const customColor = this.customCourseColors.get(courseName)!;
       const textColor = getContrastTextColor(customColor);
       return { bg: customColor, border: customColor, text: textColor };
     }
-    
+
     // Sinon palette normale
     const palette = this.colors;
     const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
@@ -361,16 +361,16 @@ export class HomePage {
   toggleDaltonismMode(enabled: boolean) {
     this.daltonismMode = enabled;
     console.log('[HomePage] Daltonism mode toggled:', enabled);
-    
+
     if (!this.calendarComponent) return;
     const api = this.calendarComponent.getApi();
-    
+
     // Mettre à jour les couleurs de tous les événements
     api.getEvents().forEach(ev => {
       const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
       const colorKey = this.courseColorKeys.get(evBase) || 'blue';
       const palette = this.getColorPaletteForCourse(evBase, colorKey);
-      
+
       try {
         ev.setProp('backgroundColor', palette.bg);
         ev.setProp('borderColor', palette.border);
@@ -379,7 +379,7 @@ export class HomePage {
         console.error('[HomePage] Error updating event color:', err);
       }
     });
-    
+
     // Mettre à jour this.courses pour la liste à droite
     this.courses.forEach(course => {
       const colorKey = this.courseColorKeys.get(course.name) || 'blue';
@@ -393,20 +393,20 @@ export class HomePage {
   // Open the course settings modal
   async openSettings() {
     console.log('[HomePage] openSettings called, this.courses:', this.courses);
-    
+
     if (!this.courses || this.courses.length === 0) {
       this.buildCoursesFromEvents();
     }
-    
+
     const coursesToShow = this.courses.map(c => ({ ...c }));
-    
+
     const onColorChange = (courseName: string, newColor: string) => {
       this.customCourseColors.set(courseName, newColor);
-      
+
       if (!this.calendarComponent) return;
       const api = this.calendarComponent.getApi();
       const textColor = getContrastTextColor(newColor);
-      
+
       api.getEvents().forEach(ev => {
         const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
         if (evBase === courseName) {
@@ -419,7 +419,7 @@ export class HomePage {
           }
         }
       });
-      
+
       const course = this.courses.find(c => c.name === courseName);
       if (course) {
         course.colorFill = newColor;
@@ -427,23 +427,23 @@ export class HomePage {
         course.isCustomColor = true;
       }
     };
-    
+
     const onDaltonismToggle = (enabled: boolean) => {
       this.toggleDaltonismMode(enabled);
     };
 
     const onResetColors = () => {
       this.customCourseColors.clear();
-      
+
       if (!this.calendarComponent) return;
       const api = this.calendarComponent.getApi();
-      
+
       this.buildCoursesFromEvents();
-      
+
       api.getEvents().forEach(ev => {
         const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
         const course = this.courses.find(c => c.name === evBase);
-        
+
         if (course) {
           try {
             ev.setProp('backgroundColor', course.colorFill);
@@ -455,13 +455,13 @@ export class HomePage {
         }
       });
     };
-    
+
     const mod = await import('./course-settings.component');
     const CourseSettingsComponent = mod.CourseSettingsComponent;
 
     const modal = await this.modalCtrl.create({
       component: CourseSettingsComponent,
-      componentProps: { 
+      componentProps: {
         courses: coursesToShow,
         onColorChange: onColorChange,
         onDaltonismToggle: onDaltonismToggle,
@@ -477,13 +477,13 @@ export class HomePage {
 
     await modal.present();
     const res = await modal.onWillDismiss();
-    
+
     if (res && res.data && res.data.courses) {
       const updated: Array<any> = res.data.courses;
       if (res.data.daltonismMode !== undefined) {
         this.daltonismMode = res.data.daltonismMode;
       }
-      
+
       updated.forEach(u => {
         const prev = this.courses.find(c => c.name === u.name);
         if (prev) {
@@ -495,7 +495,7 @@ export class HomePage {
 
       if (this.calendarComponent) {
         const api = this.calendarComponent.getApi();
-        
+
         this.allEvents = this.allEvents.map(ev => {
           const base = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
           const newCourse = updated.find(u => u.name === base);
@@ -532,7 +532,7 @@ export class HomePage {
         const colorFill = ev.backgroundColor || ev.background || ev.extendedProps?.backgroundColor || colorBorder || this.colors.blue.bg;
         const textColor = getContrastTextColor(colorFill);
         map.set(baseName, { name: baseName, colorFill: colorFill, colorBorder: colorBorder, textColor: textColor, checked: true });
-        
+
         let colorKey = 'blue';
         const colorPalette = this.colors as any;
         for (const [key, colorObj] of Object.entries(colorPalette)) {
@@ -570,7 +570,7 @@ export class HomePage {
       if (!exists) {
         const colorKey = this.courseColorKeys.get(course.name) || 'blue';
         const palette = this.getColorPaletteForCourse(course.name, colorKey);
-        
+
         api.addEvent({
           title: e.title,
           start: e.start,
@@ -638,12 +638,12 @@ export class HomePage {
   // --- NOUVELLE MÉTHODE POUR OUVRIR LA POPUP ---
   async openEventDetails(event: any) {
     const props = event.extendedProps || {};
-    
+
     // Formatage de la date (ex: 18/02/25, 12:30-13:50)
     const dateStart = event.start;
     const dateEnd = event.end;
     let dateStr = '';
-    
+
     if (dateStart && dateEnd) {
       const day = dateStart.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
       const timeStart = dateStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
