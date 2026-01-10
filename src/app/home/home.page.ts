@@ -70,7 +70,8 @@ export class HomePage {
     locale: frLocale,
     headerToolbar: false,
     weekends: false,
-    initialDate: '2025-11-24',
+    // initialDate: use the selectedDate (initialised to today) so the calendar opens on the current date
+    initialDate: this.selectedDate,
 
     // --- HORAIRES & TAILLE ---
     slotMinTime: '08:00:00',
@@ -163,153 +164,418 @@ export class HomePage {
 
     // --- DONNÉES DE L'EMPLOI DU TEMPS ---
     events: [
-      // LUNDI 24
+      // =========================
+      // SEMAINE 1 — 05 → 09 JAN
+      // =========================
+
+      // LUNDI 05
       {
-        title: 'Sport (APSA)',
-        start: '2025-11-24T08:00:00', end: '2025-11-24T10:00:00',
-        extendedProps: { room: 'Gymnase', teacher: 'M. LEGRAND', note: 'Prévoir bouteille d\'eau et tenue' },
+        title: 'APSA',
+        start: '2026-01-05T08:00:00', end: '2026-01-05T10:00:00',
+        extendedProps: { room: '-', teacher: null },
         backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
       },
       {
-        title: 'Maths (Cours)',
-        start: '2025-11-24T11:00:00', end: '2025-11-24T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. VIGNEAU' },
+        title: 'Mathématiques de base: méthodes et outil - Cours2',
+        start: '2026-01-05T11:00:00', end: '2026-01-05T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Conception Log.',
-        start: '2025-11-24T13:30:00', end: '2025-11-24T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. CHENE' },
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-05T13:30:00', end: '2026-01-05T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Conception Log.',
-        start: '2025-11-24T15:00:00', end: '2025-11-24T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. CHENE', note: 'Rendre le TP Diagrammes de classes' },
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-05T15:00:00', end: '2026-01-05T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Conception Log.',
-        start: '2025-11-24T16:30:00', end: '2025-11-24T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. CHENE' },
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-05T16:30:00', end: '2026-01-05T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
 
-      // MARDI 25
+      // MARDI 06
       {
-        title: 'Maths (EVAL)',
-        start: '2025-11-25T08:00:00', end: '2025-11-25T09:15:00',
-        extendedProps: { room: 'NA-G. Charpak', teacher: 'Mme. VIGNEAU' },
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-06T08:00:00', end: '2026-01-06T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
         backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
       },
       {
-        title: 'Maths (EVAL)',
-        start: '2025-11-25T09:30:00', end: '2025-11-25T10:45:00',
-        extendedProps: { room: 'NA-G. Charpak', teacher: 'Mme. VIGNEAU' },
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-06T09:30:00', end: '2026-01-06T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
         backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
       },
       {
-        title: 'Anglais',
-        start: '2025-11-25T11:00:00', end: '2025-11-25T12:15:00',
-        // Ajout d'une note pour tester la popup
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. WILSON', note: 'Apporter un jeux de cartes' },
+        title: 'Anglais (S5)',
+        start: '2026-01-06T11:00:00', end: '2026-01-06T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
         backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
       },
+
+      // MERCREDI 07
       {
-        title: 'Compréhension Ent.',
-        start: '2025-11-25T13:30:00', end: '2025-11-25T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. DUMAS' },
+        title: 'IHM - Cours1',
+        start: '2026-01-07T08:00:00', end: '2026-01-07T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Compréhension Ent.',
-        start: '2025-11-25T15:00:00', end: '2025-11-25T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. DUMAS' },
+        title: 'IHM - Cours1',
+        start: '2026-01-07T09:30:00', end: '2026-01-07T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Compréhension Ent.',
-        start: '2025-11-25T16:30:00', end: '2025-11-25T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. DUMAS' },
+        title: 'IHM - Cours1',
+        start: '2026-01-07T11:00:00', end: '2026-01-07T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
 
-      // MERCREDI 26
+      // JEUDI 08
       {
-        title: 'IHM',
-        start: '2025-11-26T08:00:00', end: '2025-11-26T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. ROCHE' },
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-08T08:00:00', end: '2026-01-08T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'IHM',
-        start: '2025-11-26T09:30:00', end: '2025-11-26T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. ROCHE' },
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-08T09:30:00', end: '2026-01-08T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'IHM',
-        start: '2025-11-26T11:00:00', end: '2025-11-26T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. ROCHE' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Lancement Comm.',
-        start: '2025-11-26T13:30:00', end: '2025-11-26T16:15:00',
-        extendedProps: { room: 'NA-J142 / J147', teacher: 'Mme. FABRE' },
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-08T11:00:00', end: '2026-01-08T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
 
-      // JEUDI 27
+      // VENDREDI 09
       {
-        title: 'Maths Discrètes',
-        start: '2025-11-27T08:00:00', end: '2025-11-27T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. PERRIN' },
+        title: 'Anglais (S5)',
+        start: '2026-01-09T08:00:00', end: '2026-01-09T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-09T09:30:00', end: '2026-01-09T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-09T13:30:00', end: '2026-01-09T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
+        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
+      },
+      {
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-09T15:00:00', end: '2026-01-09T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
+        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
+      },
+      {
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-09T16:30:00', end: '2026-01-09T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
+        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
+      },
+
+      // =========================
+      // SEMAINE 2 — 12 → 16 JAN
+      // =========================
+
+      // LUNDI 12
+      {
+        title: 'APSA',
+        start: '2026-01-12T08:00:00', end: '2026-01-12T10:00:00',
+        extendedProps: { room: '-', teacher: null },
+        backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
+      },
+      {
+        title: 'Mathématiques de base: méthodes et outil - Cours2',
+        start: '2026-01-12T11:00:00', end: '2026-01-12T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Maths Discrètes',
-        start: '2025-11-27T09:30:00', end: '2025-11-27T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. PERRIN' },
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-12T13:30:00', end: '2026-01-12T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
       {
-        title: 'Maths Discrètes',
-        start: '2025-11-27T11:00:00', end: '2025-11-27T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. PERRIN' },
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-12T15:00:00', end: '2026-01-12T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Conception logicielle - Cours1',
+        start: '2026-01-12T16:30:00', end: '2026-01-12T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
         backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
       },
 
-      // VENDREDI 28
+      // MARDI 13
       {
-        title: 'Anglais',
-        start: '2025-11-28T08:00:00', end: '2025-11-28T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. WILSON' },
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-13T08:00:00', end: '2026-01-13T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-13T09:30:00', end: '2026-01-13T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-13T11:00:00', end: '2026-01-13T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
         backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
       },
       {
-        title: 'Anglais',
-        start: '2025-11-28T09:30:00', end: '2025-11-28T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'Mme. WILSON' },
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-13T13:30:00', end: '2026-01-13T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-13T15:00:00', end: '2026-01-13T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-13T16:30:00', end: '2026-01-13T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+
+      // MERCREDI 14
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-14T08:00:00', end: '2026-01-14T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-14T09:30:00', end: '2026-01-14T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-14T11:00:00', end: '2026-01-14T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+
+      // JEUDI 15
+      {
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-15T08:00:00', end: '2026-01-15T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-15T09:30:00', end: '2026-01-15T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Mathématiques discrètes - Cours1',
+        start: '2026-01-15T11:00:00', end: '2026-01-15T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+
+      // VENDREDI 16
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-16T08:00:00', end: '2026-01-16T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
         backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
       },
       {
-        title: 'Archi Distribuée',
-        start: '2025-11-28T13:30:00', end: '2025-11-28T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. TORRES' },
+        title: 'Anglais (S5)',
+        start: '2026-01-16T09:30:00', end: '2026-01-16T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Débriefing - Cours1',
+        start: '2026-01-16T11:00:00', end: '2026-01-16T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'ROSINOSKY Guillaume / TISI Massimo' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-16T13:30:00', end: '2026-01-16T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
         backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
       },
       {
-        title: 'Archi Distribuée',
-        start: '2025-11-28T15:00:00', end: '2025-11-28T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. TORRES' },
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-16T15:00:00', end: '2026-01-16T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
         backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
       },
       {
-        title: 'Archi Distribuée',
-        start: '2025-11-28T16:30:00', end: '2025-11-28T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'M. TORRES' },
+        title: 'Architectures distribuées - Travail personnel (Libre service)',
+        start: '2026-01-16T16:30:00', end: '2026-01-16T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
         backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
+      },
+
+      // =========================
+      // SEMAINE 3 — 19 → 23 JAN
+      // =========================
+
+      // LUNDI 19
+      {
+        title: 'APSA',
+        start: '2026-01-19T08:00:00', end: '2026-01-19T10:00:00',
+        extendedProps: { room: '-', teacher: null },
+        backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
+      },
+      {
+        title: 'Mathématiques de base: méthodes et outil - Cours2',
+        start: '2026-01-19T11:00:00', end: '2026-01-19T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Conception logicielle - SOUTENANCES',
+        start: '2026-01-19T13:30:00', end: '2026-01-19T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Conception logicielle - SOUTENANCES',
+        start: '2026-01-19T15:00:00', end: '2026-01-19T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Conception logicielle - SOUTENANCES',
+        start: '2026-01-19T16:30:00', end: '2026-01-19T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+
+      // MARDI 20 (⚠️ salle Charpak sur ton screen)
+      {
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-20T08:00:00', end: '2026-01-20T09:15:00',
+        extendedProps: { room: 'NA-G. Charpak (A120) - (VC-200)', teacher: 'LEMOINE David' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Mathématiques de base: méthodes et outil - TD2',
+        start: '2026-01-20T09:30:00', end: '2026-01-20T10:45:00',
+        extendedProps: { room: 'NA-G. Charpak (A120) - (VC-200)', teacher: 'LEMOINE David' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-20T11:00:00', end: '2026-01-20T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-20T13:30:00', end: '2026-01-20T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-20T15:00:00', end: '2026-01-20T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'Compréhension du travail et des entreprises - Cours1',
+        start: '2026-01-20T16:30:00', end: '2026-01-20T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+
+      // MERCREDI 21
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-21T08:00:00', end: '2026-01-21T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-21T09:30:00', end: '2026-01-21T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+      {
+        title: 'IHM - Cours1',
+        start: '2026-01-21T11:00:00', end: '2026-01-21T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
+        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
+      },
+
+      // JEUDI 22 : rien sur ton screen
+
+      // VENDREDI 23
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-23T08:00:00', end: '2026-01-23T09:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Anglais (S5)',
+        start: '2026-01-23T09:30:00', end: '2026-01-23T10:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
+        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
+      },
+      {
+        title: 'Conseil de promotion - Cours1',
+        start: '2026-01-23T11:00:00', end: '2026-01-23T12:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'ROSINOSKY Guillaume / SALAÜN Marine / TISI Massimo' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
+        start: '2026-01-23T13:30:00', end: '2026-01-23T14:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
+        start: '2026-01-23T15:00:00', end: '2026-01-23T16:15:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
+      },
+      {
+        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
+        start: '2026-01-23T16:30:00', end: '2026-01-23T17:45:00',
+        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
+        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
       }
     ]
   };

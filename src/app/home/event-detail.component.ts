@@ -8,11 +8,11 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule, IonicModule],
   template: `
     <div class="custom-modal-card">
-      
+
       <div class="header-strip" [style.background-color]="color"></div>
 
       <div class="card-content">
-        
+
         <div class="card-header">
           <div class="title">{{ eventTitle }}</div>
           <div class="close-icon" (click)="close()">

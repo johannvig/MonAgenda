@@ -1,24 +1,26 @@
-/* global.scss */
+/* src/global.scss */
 
 ion-modal.event-detail-modal {
-  /* 1. Dimensions : On contraint la taille */
-  --width: 290px;
+  /* taille */
+  --width: 90vw;
+  --max-width: 650px;
   --height: auto;
   --border-radius: 16px;
 
-  /* 2. Transparence TOTALE du conteneur Ionic */
-  --background: transparent !important;
+  /* IMPORTANT : empêche le "modal-shadow" d’être noir (dark mode) */
   --ion-background-color: transparent !important;
-  
-  /* 3. Suppression des ombres Ionic */
-  --box-shadow: none !important;
-  box-shadow: none !important;
 
-  /* 4. Cible le Shadow DOM interne pour supprimer le fond blanc/noir par défaut */
-  &::part(content) {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    -webkit-box-shadow: none !important;
-  }
+  /* conteneur + ombres */
+  --background: transparent !important;
+  --box-shadow: none !important;
+
+  /* backdrop léger derrière */
+  --ion-backdrop-color: #000 !important;
+  --backdrop-opacity: 0.50 !important;
+}
+
+ion-modal.event-detail-modal::part(content) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
