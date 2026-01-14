@@ -17,8 +17,8 @@
         <ion-label>{{ c.name }}</ion-label>
       </div>
       <div class="color-controls" slot="end">
-        <input type="color" [value]="c.colorFill" (change)="updateColor(c, $event.target.value)" />
-        <input type="text" [value]="c.colorFill" (change)="updateColor(c, $event.target.value)" class="hex-input" />
+        <input type="color" [value]="c.colorFill" (input)="updateColor(c, $event.target.value)" />
+        <input type="text" [value]="c.colorFill" (input)="updateColor(c, $event.target.value)" class="hex-input" />
       </div>
     </ion-item>
   </ion-list>

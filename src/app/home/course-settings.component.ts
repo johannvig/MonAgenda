@@ -40,6 +40,12 @@ export class CourseSettingsComponent implements OnInit {
   updateColor(course: any, newColor: string) {
     course.colorFill = newColor;
     course.isCustomColor = true; // Marquer comme personnalisée
+    
+    // Calculer et mettre à jour la couleur de texte basée sur la luminance
+    if (this.getContrastTextColor) {
+      course.textColor = this.getContrastTextColor(newColor);
+    }
+    
     // Call the callback to update calendar in real-time
     if (this.onColorChange) {
       this.onColorChange(course.name, newColor);
