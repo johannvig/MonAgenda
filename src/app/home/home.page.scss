@@ -77,6 +77,14 @@
     border-radius: 6px !important; 
     overflow: hidden; 
     padding: 0;
+    transition: all 0.2s ease;
+    cursor: pointer !important;
+    
+    &:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18) !important;
+      transform: translateY(-0.5px);
+      filter: brightness(1.01);
+    }
   }
 
   .custom-event-content {
