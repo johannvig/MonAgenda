@@ -24,9 +24,6 @@ export class CourseSettingsComponent implements OnInit {
 
   // local copy so changes are not applied until Save
   localCourses: Array<{ name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean; isCustomColor?: boolean }> = [];
-  
-  // Daltonisme mode
-  daltonismEnabled: boolean = false;
 
   constructor(private modalCtrl: ModalController) {
     console.log('[CourseSettings] Constructor called, courses input:', this.courses);
@@ -36,10 +33,7 @@ export class CourseSettingsComponent implements OnInit {
     console.log('[CourseSettings] ngOnInit called, courses:', this.courses);
     // shallow clone
     this.localCourses = this.courses.map(c => ({ ...c }));
-    // Initialize daltonismEnabled with the passed value
-    this.daltonismEnabled = this.daltonismMode;
     console.log('[CourseSettings] localCourses after map:', this.localCourses);
-    console.log('[CourseSettings] daltonismEnabled initialized to:', this.daltonismEnabled);
   }
 
   // Called when user changes a color
@@ -50,57 +44,6 @@ export class CourseSettingsComponent implements OnInit {
     if (this.onColorChange) {
       this.onColorChange(course.name, newColor);
     }
-  }
-
-  // Called when daltonism toggle changes
-  toggleDaltonism() {
-    if (this.onDaltonismToggle) {
-      this.onDaltonismToggle(this.daltonismEnabled);
-    }
-    
-    // Mettre à jour les couleurs affichées dans la popup
-    this.updateColorsForMode();
-  }
-
-  // Met à jour les couleurs des cours affichées selon le mode daltonisme
-  private updateColorsForMode() {
-    if (!this.courseColorKeys || !this.colors || !this.colorsDaltonism || !this.getContrastTextColor) {
-      return;
-    }
-
-    const getContrastTextColor = this.getContrastTextColor;
-    
-    this.localCourses.forEach(course => {
-      // Récupérer la clé de couleur originale
-      const colorKey = this.courseColorKeys!.get(course.name) || 'blue';
-      
-      // Si daltonisme OFF: utiliser couleur perso si elle existe, sinon palette normale
-      if (!this.daltonismEnabled) {
-        const hasCustomColor = this.customCourseColors?.has(course.name);
-        if (hasCustomColor) {
-          const customColor = this.customCourseColors!.get(course.name)!;
-          course.colorFill = customColor;
-          course.colorBorder = customColor;
-          course.textColor = getContrastTextColor(customColor);
-          return;
-        }
-        // Sinon palette normale
-        const colorObj = (this.colors as any)[colorKey];
-        if (colorObj) {
-          course.colorFill = colorObj.bg;
-          course.colorBorder = colorObj.border;
-          course.textColor = colorObj.text;
-        }
-      } else {
-        // Si daltonisme ON: toujours afficher palette daltonisme (même pour perso)
-        const colorObj = (this.colorsDaltonism as any)[colorKey];
-        if (colorObj) {
-          course.colorFill = colorObj.bg;
-          course.colorBorder = colorObj.border;
-          course.textColor = colorObj.text;
-        }
-      }
-    });
   }
 
   cancel() {
@@ -127,15 +70,6 @@ export class CourseSettingsComponent implements OnInit {
       }
     });
 
-    // Désactiver le mode daltonisme
-    if (this.daltonismEnabled) {
-      this.daltonismEnabled = false;
-      // Appeler la callback daltonisme pour mettre à jour le parent
-      if (this.onDaltonismToggle) {
-        this.onDaltonismToggle(false);
-      }
-    }
-
     // Appeler la callback au parent pour mettre à jour aussi le calendrier
     if (this.onResetColors) {
       this.onResetColors();
@@ -143,6 +77,6 @@ export class CourseSettingsComponent implements OnInit {
   }
 
   save() {
-    this.modalCtrl.dismiss({ courses: this.localCourses, daltonismMode: this.daltonismEnabled }, 'save');
+    this.modalCtrl.dismiss({ courses: this.localCourses }, 'save');
   }
 }

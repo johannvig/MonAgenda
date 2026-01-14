@@ -46,24 +46,15 @@ selectedTeacher: string | null = null;
   selectedDate: string = new Date().toISOString();
 
   // Mode daltonisme
-  daltonismMode: boolean = false;
+  daltonismMode: boolean = true;
 
-  // Définition des palettes de couleurs
+  // Définition des palettes de couleurs - Palette pastel harmonieuse
   colors = {
-    blue:   { bg: '#dbeafe', border: '#3b82f6', text: '#1e3a8a' },
-    green:  { bg: '#dcfce7', border: '#22c55e', text: '#14532d' },
-    yellow: { bg: '#fef9c3', border: '#facc15', text: '#854d0e' },
-    cyan:   { bg: '#cffafe', border: '#06b6d4', text: '#164e63' },
-    gray:   { bg: '#f3f4f6', border: '#9ca3af', text: '#374151' }
-  };
-
-  // Palettes daltonisme (protanopie, deutéranopie, tritanopie)
-  colorsDaltonism = {
-    blue:   { bg: '#0173B2', border: '#0173B2', text: '#ffffff' },    // Bleu
-    green:  { bg: '#DE8F05', border: '#DE8F05', text: '#ffffff' },    // Orange
-    yellow: { bg: '#CC78BC', border: '#CC78BC', text: '#ffffff' },    // Magenta
-    cyan:   { bg: '#029E73', border: '#029E73', text: '#ffffff' },    // Vert
-    gray:   { bg: '#ECE133', border: '#ECE133', text: '#000000' }     // Jaune
+    blue:   { bg: '#e0f0fa', border: '#7fb3d5', text: '#2c5aa0' },
+    green:  { bg: '#faded7', border: '#f5a892', text: '#9d3c2a' },
+    yellow: { bg: '#fdf3d6', border: '#f5dc7d', text: '#8b7500' },
+    cyan:   { bg: '#d6f5f2', border: '#7dd9d0', text: '#2d8076' },
+    gray:   { bg: '#ebe9f2', border: '#c9c6e3', text: '#5d5a7f' }
   };
 
 
@@ -665,19 +656,6 @@ constructor(
 
   // Récupère la palette de couleurs appropriée pour un cours selon le mode
   private getColorPaletteForCourse(courseName: string, originalColorKey: string): { bg: string; border: string; text: string } {
-    // Si daltonisme ON
-    if (this.daltonismMode) {
-      const palette = this.colorsDaltonism;
-      const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
-      return (palette as any)[colorKey];
-    }
-
-    // Si daltonisme OFF: utiliser couleur perso si elle existe
-    if (this.customCourseColors.has(courseName)) {
-      const customColor = this.customCourseColors.get(courseName)!;
-      const textColor = getContrastTextColor(customColor);
-      return { bg: customColor, border: customColor, text: textColor };
-    }
 
     // Sinon palette normale
     const palette = this.colors;
@@ -798,7 +776,6 @@ constructor(
         courseColorKeys: this.courseColorKeys,
         customCourseColors: this.customCourseColors,
         colors: this.colors,
-        colorsDaltonism: this.colorsDaltonism,
         getContrastTextColor: getContrastTextColor
       }
     });

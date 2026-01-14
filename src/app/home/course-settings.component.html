@@ -27,14 +27,6 @@
     <ion-item lines="none">
       <ion-label style="font-weight: 600;">Options complémentaires</ion-label>
     </ion-item>
-    <ion-item lines="none">
-      <ion-icon name="eye-off-outline" slot="start"></ion-icon>
-      <ion-label>Mode Daltonisme</ion-label>
-      <ion-toggle slot="end" [(ngModel)]="daltonismEnabled" (ionChange)="toggleDaltonism()"></ion-toggle>
-    </ion-item>
-    <p *ngIf="daltonismEnabled" style="color: #666; font-size: 12px; padding: 8px; margin-top: 8px;">
-      ℹ️ Le mode daltonisme utilise des couleurs optimisées pour les daltoniens. Vos couleurs personnalisées seront conservées.
-    </p>
     <ion-item lines="none" style="margin-top: 12px;">
       <ion-button fill="outline" expand="block" (click)="resetColors()">
         <ion-icon name="refresh-outline" slot="start"></ion-icon>
