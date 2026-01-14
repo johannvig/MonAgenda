@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 
@@ -15,9 +15,9 @@ import { CommonModule } from '@angular/common';
 
         <div class="card-header">
           <div class="title">{{ eventTitle }}</div>
-          <div class="close-icon" (click)="close()">
-            <ion-icon name="close"></ion-icon>
-          </div>
+          <button class="close-icon" type="button" (click)="close()" aria-label="Fermer la fiche">
+            <ion-icon name="close" aria-hidden="true"></ion-icon>
+          </button>
         </div>
 
         <div class="separator"></div>
@@ -43,6 +43,24 @@ import { CommonModule } from '@angular/common';
         <div class="info-row" *ngIf="organism">
           <span class="label">ORGANISME</span>
           <span class="data">{{ organism }}</span>
+        </div>
+
+        <div class="separator-light"></div>
+
+        <div class="info-row color-row">
+          <span class="label">COULEUR</span>
+          <div class="color-control">
+            <input
+              class="color-input"
+              type="color"
+              [value]="selectedColor"
+              (input)="onColorInput($event)"
+              aria-label="Choisir une couleur"
+            />
+            <button class="color-apply" type="button" (click)="applyColor()" [disabled]="!hasColorChange">
+              Appliquer
+            </button>
+          </div>
         </div>
 
         <ng-container *ngIf="note">
@@ -95,6 +113,10 @@ import { CommonModule } from '@angular/common';
     }
 
     .close-icon {
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      background: transparent;
       position: absolute;
       right: -10px;
       top: -10px;
@@ -146,17 +168,60 @@ import { CommonModule } from '@angular/common';
       font-style: italic;
     }
 
+    .color-row {
+      margin-bottom: 0;
+    }
+
+    .color-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .color-input {
+      width: 42px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .color-apply {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: #111827;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .color-apply:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
     
 .teacher-link{
-    background-color:transparent;
+      background-color:transparent;
       font-size: 0.95rem;
       font-weight: 600;
-    color:#111827;
+      color:#111827;
+    }
+
+    .teacher-link:focus-visible,
+    .close-icon:focus-visible {
+      outline: 2px solid #1e40af;
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
   `]
 })
-export class EventDetailComponent {
+export class EventDetailComponent implements OnInit {
   @Input() eventTitle: string = '';
   @Input() dateFormatted: string = '';
   @Input() teacher: string = '';
@@ -165,7 +230,14 @@ export class EventDetailComponent {
   @Input() note: string = '';
   @Input() color: string = '';
 
+  selectedColor: string = '#ffffff';
+  hasColorChange = false;
+
   constructor(private modalCtrl: ModalController) {}
+
+  ngOnInit() {
+    this.selectedColor = this.color || '#ffffff';
+  }
 
 openTeacherSchedule() {
   if (!this.teacher) return;
@@ -175,6 +247,21 @@ openTeacherSchedule() {
   });
 }
 
+  onColorInput(event: Event) {
+    const target = event.target as HTMLInputElement | null;
+    const value = target?.value || '';
+    if (!value) return;
+    this.selectedColor = value;
+    this.hasColorChange = value !== this.color;
+  }
+
+  applyColor() {
+    if (!this.hasColorChange) return;
+    this.modalCtrl.dismiss({
+      action: 'color_change',
+      color: this.selectedColor
+    });
+  }
 
   close() {
     this.modalCtrl.dismiss();

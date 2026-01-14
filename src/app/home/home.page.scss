@@ -1,10 +1,47 @@
 // 1. FOND GÉNÉRAL
 .bg-gray { --background: #f9fafb; }
 
+// Layout ratios (desktop only). Adjust these two values to change column widths.
+.layout-row {
+  --calendar-col-width: 75%;
+  --side-col-width: 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
 // 2. HEADERS
 .calendar-top-header {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
   h2 { font-size: 1.5rem; font-weight: 700; margin: 0; color: #1f2937; letter-spacing: -0.5px; }
+}
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 15px;
+  padding: 6px 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+}
+
+.week-nav-text {
+  color: #4b5563;
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  padding: 0 6px;
+}
+
+.week-nav ion-button {
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --color: #374151;
 }
 
 .filter-header {
@@ -41,10 +78,78 @@
 // 4. LAYOUT COLONNE GAUCHE (Fix hauteur min)
 .calendar-col {
   display: flex; flex-direction: column;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  padding: 5px;
+  min-width: 0;
   .calendar-top-header { flex-shrink: 0; }
   .card-white {
     flex-grow: 1; min-height: 200px; 
     full-calendar { flex-grow: 1; height: 100%; min-height: 100%; }
+  }
+}
+
+.side-col {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  padding: 5px;
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  .layout-row {
+    align-items: stretch;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .calendar-col {
+    flex: 0 0 var(--calendar-col-width) !important;
+    max-width: var(--calendar-col-width) !important;
+    width: var(--calendar-col-width) !important;
+  }
+
+  .side-col {
+    flex: 0 0 var(--side-col-width) !important;
+    max-width: var(--side-col-width) !important;
+    width: var(--side-col-width) !important;
+    min-width: 0;
+  }
+
+  .col-resizer {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: var(--calendar-col-width);
+    transform: translateX(-50%);
+    width: 12px;
+    cursor: col-resize;
+    background: linear-gradient(90deg, transparent 0%, #e5e7eb 45%, #e5e7eb 55%, transparent 100%);
+    border-radius: 999px;
+    align-self: stretch;
+    pointer-events: auto;
+    touch-action: none;
+    padding: 0;
+    margin: 0;
+    z-index: 5;
+  }
+
+  .layout-row.is-resizing {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  .layout-row.is-resizing .col-resizer {
+    background: linear-gradient(90deg, transparent 0%, #c7d2fe 45%, #c7d2fe 55%, transparent 100%);
+  }
+}
+
+@media (max-width: 991px) {
+  .col-resizer {
+    display: none;
   }
 }
 
@@ -303,11 +408,50 @@
 .teacher-link:active {
   background: transparent !important;
   box-shadow: none !important;
-  outline: none !important;
+}
+
+.teacher-link:focus-visible {
+  outline: 2px solid #1e40af;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .teacher-link:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 992px) {
+  .calendar-top-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .week-nav {
+    justify-content: space-between;
+  }
+
+  .card-white {
+    padding: 12px;
+  }
+
+  .room-list {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 600px) {
+  .calendar-top-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .week-nav {
+    flex-wrap: wrap;
+  }
+
+  .week-nav-text {
+    font-size: 0.85rem;
+  }
 }
 
 

@@ -22,8 +22,20 @@ export class CourseSettingsComponent implements OnInit {
   @Input() colorsDaltonism: any = {};
   @Input() getContrastTextColor?: (hex: string) => string;
 
-  // local copy so changes are not applied until Save
-  localCourses: Array<{ name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean; isCustomColor?: boolean }> = [];
+  private readonly hexColorRe = /^#[0-9a-fA-F]{6}$/;
+
+  // local copy so changes are not applied until Validate
+  localCourses: Array<{
+    name: string;
+    colorFill: string;
+    colorBorder?: string;
+    textColor?: string;
+    checked: boolean;
+    isCustomColor?: boolean;
+    pendingColor?: string;
+    pendingValid?: boolean;
+  }> = [];
+  localDaltonismMode: boolean = false;
 
   constructor(private modalCtrl: ModalController) {
     console.log('[CourseSettings] Constructor called, courses input:', this.courses);
@@ -32,24 +44,65 @@ export class CourseSettingsComponent implements OnInit {
   ngOnInit() {
     console.log('[CourseSettings] ngOnInit called, courses:', this.courses);
     // shallow clone
-    this.localCourses = this.courses.map(c => ({ ...c }));
+    this.localCourses = this.courses.map(c => ({
+      ...c,
+      pendingColor: c.colorFill,
+      pendingValid: this.hexColorRe.test(c.colorFill || '')
+    }));
+    this.localDaltonismMode = this.daltonismMode;
     console.log('[CourseSettings] localCourses after map:', this.localCourses);
   }
 
   // Called when user changes a color
   updateColor(course: any, newColor: string) {
-    course.colorFill = newColor;
-    course.isCustomColor = true; // Marquer comme personnalisée
-    
-    // Calculer et mettre à jour la couleur de texte basée sur la luminance
+    const normalized = this.normalizeHexColor(newColor);
+    course.pendingColor = normalized || newColor;
+    course.pendingValid = !!normalized;
+
+    if (normalized && this.getContrastTextColor) {
+      course.textColor = this.getContrastTextColor(normalized);
+    }
+  }
+
+  applyColor(course: any) {
+    const normalized = this.normalizeHexColor(course.pendingColor || '');
+    if (!normalized) return;
+
+    course.colorFill = normalized;
+    course.pendingColor = normalized;
+    course.pendingValid = true;
+    course.isCustomColor = true;
+
     if (this.getContrastTextColor) {
-      course.textColor = this.getContrastTextColor(newColor);
+      course.textColor = this.getContrastTextColor(normalized);
     }
-    
-    // Call the callback to update calendar in real-time
+
     if (this.onColorChange) {
-      this.onColorChange(course.name, newColor);
+      this.onColorChange(course.name, normalized);
     }
+  }
+
+  hasPendingChange(course: any): boolean {
+    const normalized = this.normalizeHexColor(course.pendingColor || '');
+    if (!normalized) return false;
+    return normalized !== course.colorFill;
+  }
+
+  getPreviewColor(course: any): string {
+    const normalized = this.normalizeHexColor(course.pendingColor || '');
+    return normalized || course.colorFill || '#ffffff';
+  }
+
+  getPendingColor(course: any): string {
+    const normalized = this.normalizeHexColor(course.pendingColor || '');
+    return normalized || course.colorFill || '#ffffff';
+  }
+
+  private normalizeHexColor(value: string): string | null {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return null;
+    const withHash = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+    return this.hexColorRe.test(withHash) ? withHash.toLowerCase() : null;
   }
 
   cancel() {
@@ -63,16 +116,19 @@ export class CourseSettingsComponent implements OnInit {
     }
 
     const getContrastTextColor = this.getContrastTextColor;
+    const palette = this.localDaltonismMode ? this.colorsDaltonism : this.colors;
 
     this.localCourses.forEach(course => {
       const colorKey = this.courseColorKeys!.get(course.name) || 'blue';
-      const colorObj = (this.colors as any)[colorKey];
+      const colorObj = (palette as any)[colorKey];
       
       if (colorObj) {
         course.colorFill = colorObj.bg;
         course.colorBorder = colorObj.border;
         course.textColor = colorObj.text;
         course.isCustomColor = false; // Marquer comme non-personnalisée
+        course.pendingColor = course.colorFill;
+        course.pendingValid = true;
       }
     });
 
@@ -80,6 +136,37 @@ export class CourseSettingsComponent implements OnInit {
     if (this.onResetColors) {
       this.onResetColors();
     }
+  }
+
+  toggleDaltonism(enabled: boolean) {
+    this.localDaltonismMode = enabled;
+
+    if (this.onDaltonismToggle) {
+      this.onDaltonismToggle(enabled);
+    }
+
+    if (!this.courseColorKeys || !this.getContrastTextColor) {
+      return;
+    }
+
+    const palette = enabled ? this.colorsDaltonism : this.colors;
+
+    this.localCourses.forEach(course => {
+      if (course.isCustomColor) {
+        return;
+      }
+
+      const colorKey = this.courseColorKeys!.get(course.name) || 'blue';
+      const colorObj = (palette as any)[colorKey];
+
+      if (colorObj) {
+        course.colorFill = colorObj.bg;
+        course.colorBorder = colorObj.border;
+        course.textColor = colorObj.text;
+        course.pendingColor = course.colorFill;
+        course.pendingValid = true;
+      }
+    });
   }
 
   save() {

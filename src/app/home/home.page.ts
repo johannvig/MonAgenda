@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -39,6 +39,7 @@ viewMode: 'student' | 'room' | 'teacher' = 'student';
 selectedTeacher: string | null = null;
 
   @ViewChild('myCalendar') calendarComponent!: FullCalendarComponent;
+  @ViewChild('layoutRow') layoutRow!: ElementRef<HTMLElement>;
 
   currentWeek: number = 0;
   currentYear: number = 0;
@@ -54,6 +55,16 @@ selectedTeacher: string | null = null;
     gray:   { bg: '#ebe9f2', border: '#9b97d1', text: '#5d5a7f' }
   };
 
+  // Palette daltonisme (contrastes renforces, couleurs plus distinctes)
+  colorsDaltonism = {
+    blue:   { bg: '#dceef9', border: '#0072b2', text: '#0b3d91' },
+    green:  { bg: '#e6f7f1', border: '#009e73', text: '#056449' },
+    yellow: { bg: '#fff6c2', border: '#f0e442', text: '#7a6a00' },
+    cyan:   { bg: '#e1f2ff', border: '#56b4e9', text: '#0b5a8f' },
+    gray:   { bg: '#efeff5', border: '#8e8dbe', text: '#4a4a6a' }
+  };
+
+  daltonismMode: boolean = false;
 
 /** SALLES */
 rooms: string[] = [
@@ -63,8 +74,19 @@ filteredRooms: string[] = [];
 roomQuery = '';
 selectedRoom: string | null = null;
 
+/** PROFESSEURS */
+teachers: string[] = [];
+filteredTeachers: string[] = [];
+teacherQuery = '';
+
+private isResizing = false;
+private startX = 0;
+private startLeftWidth = 0;
+private resizeRaf: number | null = null;
+
 ngOnInit() {
   this.filteredRooms = [...this.rooms];
+  this.filteredTeachers = [...this.teachers];
 }
 
 onViewModeChange() {
@@ -88,6 +110,132 @@ selectRoom(room: string) {
   this.applyFiltersToCalendar();
 }
 
+filterTeachers() {
+  const q = (this.teacherQuery || '').toLowerCase().trim();
+  this.filteredTeachers = !q
+    ? [...this.teachers]
+    : this.teachers.filter(t => t.toLowerCase().includes(q));
+}
+
+selectTeacher(teacher: string) {
+  this.selectedTeacher = teacher;
+  this.applyFiltersToCalendar();
+}
+
+startResize(event: MouseEvent | TouchEvent | PointerEvent) {
+  if (window.innerWidth < 992) return;
+  event.preventDefault();
+
+  const clientX = this.getClientX(event);
+  const rowEl = this.layoutRow?.nativeElement;
+  if (!rowEl) return;
+
+  if (event instanceof PointerEvent) {
+    const target = event.target as HTMLElement | null;
+    if (target && target.setPointerCapture) {
+      target.setPointerCapture(event.pointerId);
+    }
+  }
+
+  const leftEl = rowEl.querySelector<HTMLElement>('.calendar-col');
+  const rightEl = rowEl.querySelector<HTMLElement>('.side-col');
+  if (!leftEl || !rightEl) return;
+
+  const currentLeft = leftEl.getBoundingClientRect().width;
+  const currentRight = rightEl.getBoundingClientRect().width;
+  const total = currentLeft + currentRight;
+
+  this.isResizing = true;
+  this.startX = clientX;
+  this.startLeftWidth = currentLeft || (total * 0.75);
+  rowEl.classList.add('is-resizing');
+}
+
+@HostListener('window:mousemove', ['$event'])
+onResizeMove(event: MouseEvent) {
+  if (!this.isResizing) return;
+  this.applyResize(event.clientX);
+}
+
+@HostListener('window:pointermove', ['$event'])
+onResizePointerMove(event: PointerEvent) {
+  if (!this.isResizing) return;
+  this.applyResize(event.clientX);
+}
+
+@HostListener('window:touchmove', ['$event'])
+onResizeTouchMove(event: TouchEvent) {
+  if (!this.isResizing) return;
+  if (event.touches.length === 0) return;
+  this.applyResize(event.touches[0].clientX);
+}
+
+@HostListener('window:mouseup')
+@HostListener('window:pointerup')
+@HostListener('window:touchend')
+onResizeEnd() {
+  if (!this.isResizing) return;
+  this.isResizing = false;
+  const rowEl = this.layoutRow?.nativeElement;
+  if (rowEl) {
+    rowEl.classList.remove('is-resizing');
+  }
+  this.scheduleCalendarResize(true);
+}
+
+private getClientX(event: MouseEvent | TouchEvent | PointerEvent): number {
+  if (event instanceof TouchEvent) {
+    return event.touches[0]?.clientX || 0;
+  }
+  return event.clientX;
+}
+
+private applyResize(clientX: number) {
+  const rowEl = this.layoutRow?.nativeElement;
+  if (!rowEl) return;
+
+  const leftEl = rowEl.querySelector<HTMLElement>('.calendar-col');
+  const rightEl = rowEl.querySelector<HTMLElement>('.side-col');
+  if (!leftEl || !rightEl) return;
+
+  const total =
+    rowEl.getBoundingClientRect().width ||
+    leftEl.getBoundingClientRect().width + rightEl.getBoundingClientRect().width;
+  if (!total) return;
+  const minLeft = total * 0.55;
+  const maxLeft = total * 0.85;
+
+  const delta = clientX - this.startX;
+  const nextLeft = Math.min(maxLeft, Math.max(minLeft, this.startLeftWidth + delta));
+  const leftPercent = (nextLeft / total) * 100;
+  const rightPercent = 100 - leftPercent;
+
+  rowEl.style.setProperty('--calendar-col-width', `${leftPercent}%`, 'important');
+  rowEl.style.setProperty('--side-col-width', `${rightPercent}%`, 'important');
+  leftEl.style.setProperty('flex', `0 0 ${leftPercent}%`, 'important');
+  leftEl.style.setProperty('max-width', `${leftPercent}%`, 'important');
+  leftEl.style.setProperty('width', `${leftPercent}%`, 'important');
+  rightEl.style.setProperty('flex', `0 0 ${rightPercent}%`, 'important');
+  rightEl.style.setProperty('max-width', `${rightPercent}%`, 'important');
+  rightEl.style.setProperty('width', `${rightPercent}%`, 'important');
+  this.scheduleCalendarResize(false);
+}
+
+private scheduleCalendarResize(force: boolean) {
+  if (this.resizeRaf) {
+    cancelAnimationFrame(this.resizeRaf);
+  }
+  this.resizeRaf = requestAnimationFrame(() => {
+    this.resizeRaf = null;
+    const api = this.calendarComponent?.getApi?.();
+    if (!api) return;
+    api.updateSize();
+    if (force) {
+      // Ensure nested layout settles after drag ends.
+      setTimeout(() => api.updateSize(), 0);
+    }
+  });
+}
 
 
   calendarOptions: CalendarOptions = {
@@ -657,15 +805,21 @@ constructor(
 
   // Récupère la palette de couleurs appropriée pour un cours selon le mode
   private getColorPaletteForCourse(courseName: string, originalColorKey: string): { bg: string; border: string; text: string } {
+    const custom = this.customCourseColors.get(courseName);
+    if (custom) {
+      const textColor = getContrastTextColor(custom);
+      return { bg: custom, border: custom, text: textColor };
+    }
 
     // Sinon palette normale
-    const palette = this.colors;
+    const palette = this.daltonismMode ? this.colorsDaltonism : this.colors;
     const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
     return (palette as any)[colorKey];
   }
 
   // Applique le mode daltonisme ou revient aux couleurs normales
   toggleDaltonismMode(enabled: boolean) {
+    this.daltonismMode = enabled;
 
     if (!this.calendarComponent) return;
     const api = this.calendarComponent.getApi();
@@ -771,9 +925,11 @@ constructor(
         onColorChange: onColorChange,
         onDaltonismToggle: onDaltonismToggle,
         onResetColors: onResetColors,
+        daltonismMode: this.daltonismMode,
         courseColorKeys: this.courseColorKeys,
         customCourseColors: this.customCourseColors,
         colors: this.colors,
+        colorsDaltonism: this.colorsDaltonism,
         getContrastTextColor: getContrastTextColor
       }
     });
@@ -834,12 +990,17 @@ constructor(
         map.set(baseName, { name: baseName, colorFill: colorFill, colorBorder: colorBorder, textColor: textColor, checked: true });
 
         let colorKey = 'blue';
-        const colorPalette = this.colors as any;
-        for (const [key, colorObj] of Object.entries(colorPalette)) {
-          if ((colorObj as any).bg === colorFill) {
-            colorKey = key;
-            break;
+        let colorFound = false;
+        const palettes = [this.colors, this.colorsDaltonism] as any[];
+        for (const palette of palettes) {
+          for (const [key, colorObj] of Object.entries(palette)) {
+            if ((colorObj as any).bg === colorFill) {
+              colorKey = key;
+              colorFound = true;
+              break;
+            }
           }
+          if (colorFound) break;
         }
         this.courseColorKeys.set(baseName, colorKey);
       }
@@ -855,6 +1016,16 @@ const roomSet = new Set<string>();
 
 this.rooms = Array.from(roomSet).sort((a, b) => a.localeCompare(b));
 this.filteredRooms = [...this.rooms];
+
+// ---- Construire la liste des professeurs depuis tous les events ----
+const teacherSet = new Set<string>();
+(this.allEvents || []).forEach(ev => {
+  const t = (ev?.extendedProps?.teacher || '').toString().trim();
+  if (t && t !== '-') teacherSet.add(t);
+});
+
+this.teachers = Array.from(teacherSet).sort((a, b) => a.localeCompare(b));
+this.filteredTeachers = [...this.teachers];
 
   }
   private applyFiltersToCalendar() {
@@ -1049,7 +1220,15 @@ checkAllCourses() {
 if (res?.data?.action === 'teacher_schedule' && res.data.teacher) {
   this.selectedTeacher = res.data.teacher;
   this.viewMode = 'teacher';
+  this.teacherQuery = '';
+  this.filteredTeachers = [...this.teachers];
   this.applyFiltersToCalendar();
+}
+if (res?.data?.action === 'color_change' && res.data.color) {
+  const color = res.data.color as string;
+  event.setProp('backgroundColor', color);
+  event.setProp('borderColor', color);
+  event.setProp('textColor', getContrastTextColor(color));
 }
 
   }

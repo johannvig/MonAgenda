@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-title>Personnaliser les cours</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="cancel()">Annuler</ion-button>
+      <ion-button (click)="cancel()">Fermer</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -13,12 +13,31 @@
   <ion-list lines="none" *ngIf="localCourses.length > 0">
     <ion-item *ngFor="let c of localCourses">
       <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
-        <div class="color-preview" [style.background-color]="c.colorFill"></div>
+        <div class="color-preview" [style.background-color]="getPreviewColor(c)"></div>
         <ion-label>{{ c.name }}</ion-label>
       </div>
       <div class="color-controls" slot="end">
-        <input type="color" [value]="c.colorFill" (input)="updateColor(c, $event.target.value)" />
-        <input type="text" [value]="c.colorFill" (input)="updateColor(c, $event.target.value)" class="hex-input" />
+        <input
+          type="color"
+          [value]="getPendingColor(c)"
+          (input)="updateColor(c, $event.target.value)"
+          aria-label="Choisir la couleur pour {{ c.name }}"
+        />
+        <input
+          type="text"
+          [value]="getPendingColor(c)"
+          (input)="updateColor(c, $event.target.value)"
+          class="hex-input"
+          aria-label="Saisir le code couleur pour {{ c.name }}"
+        />
+        <ion-button
+          size="small"
+          class="apply-btn"
+          (click)="applyColor(c)"
+          [disabled]="!hasPendingChange(c)"
+        >
+          Valider
+        </ion-button>
       </div>
     </ion-item>
   </ion-list>
@@ -26,6 +45,14 @@
   <div class="options">
     <ion-item lines="none">
       <ion-label style="font-weight: 600;">Options complémentaires</ion-label>
+    </ion-item>
+    <ion-item lines="none" class="option-item">
+      <ion-label>Mode daltonisme</ion-label>
+      <ion-toggle
+        slot="end"
+        [(ngModel)]="localDaltonismMode"
+        (ionChange)="toggleDaltonism($event.detail.checked)"
+      ></ion-toggle>
     </ion-item>
     <ion-item lines="none" style="margin-top: 12px;">
       <ion-button fill="outline" expand="block" (click)="resetColors()">

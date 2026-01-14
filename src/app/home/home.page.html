@@ -3,10 +3,10 @@
     <ion-title slot="start"><b>Agenda</b></ion-title>
 
     <ion-buttons slot="end">
-  <ion-button (click)="showFakeNotif()">
-    <ion-icon name="notifications-outline"></ion-icon>
+  <ion-button (click)="showFakeNotif()" aria-label="Afficher les notifications">
+    <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
     <!-- badge toujours visible -->
-    <ion-badge class="notif-badge">1</ion-badge>
+    <ion-badge class="notif-badge" aria-label="1 notification">1</ion-badge>
   </ion-button>
 
   <ion-item lines="none">
@@ -24,10 +24,10 @@
 
 <ion-content class="bg-gray">
   <ion-grid>
-    <ion-row>
+    <div class="layout-row" #layoutRow>
 
       <!-- COLONNE GAUCHE : EMPLOI DU TEMPS -->
-      <ion-col size="12" size-lg="9" class="calendar-col">
+      <div class="calendar-col">
 
         <div class="calendar-top-header">
           <h2>Semaine {{ currentWeek }}</h2>
@@ -36,17 +36,17 @@
           </ion-button>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-          <ion-button fill="clear" size="small" (click)="prevWeek()">
-            <ion-icon name="chevron-back-outline" slot="icon-only"></ion-icon>
+        <div class="week-nav">
+          <ion-button fill="clear" size="small" (click)="prevWeek()" aria-label="Semaine précédente">
+            <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
           </ion-button>
-          
-          <div style="flex-grow: 1; text-align: center; color: #6b7280; font-size: 0.9rem;">
+
+          <div class="week-nav-text">
             Naviguer entre les semaines
           </div>
-          
-          <ion-button fill="clear" size="small" (click)="nextWeek()">
-            <ion-icon name="chevron-forward-outline" slot="icon-only"></ion-icon>
+
+          <ion-button fill="clear" size="small" (click)="nextWeek()" aria-label="Semaine suivante">
+            <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
           </ion-button>
         </div>
 
@@ -54,10 +54,20 @@
           <full-calendar #myCalendar [options]="calendarOptions"></full-calendar>
         </div>
 
-      </ion-col>
+      </div>
+
+      <div
+        class="col-resizer"
+        role="separator"
+        aria-label="Redimensionner les colonnes"
+        tabindex="0"
+        (pointerdown)="startResize($event)"
+        (mousedown)="startResize($event)"
+        (touchstart)="startResize($event)"
+      ></div>
 
       <!-- COLONNE DROITE : PANNEAU -->
-      <ion-col size="12" size-lg="3" class="side-col">
+      <div class="side-col">
 
         <!-- Switch + Mini calendrier -->
         <div class="card-white">
@@ -70,6 +80,9 @@
               <ion-segment-button value="room">
                 <ion-label>Salle</ion-label>
               </ion-segment-button>
+              <ion-segment-button value="teacher">
+                <ion-label>Professeur</ion-label>
+              </ion-segment-button>
             </ion-segment>
           </div>
 
@@ -78,7 +91,8 @@
             color="primary"
             [value]="selectedDate"
             firstDayOfWeek="1"
-            (ionChange)="changeDate($event)">
+            (ionChange)="changeDate($event)"
+            aria-label="Sélectionner une date">
           </ion-datetime>
 
         </div>
@@ -91,8 +105,8 @@
 
             <div class="filter-header">
               <h3>Option des cours</h3>
-              <ion-button fill="clear" size="small" (click)="openSettings()">
-                <ion-icon name="settings-outline" slot="icon-only"></ion-icon>
+              <ion-button fill="clear" size="small" (click)="openSettings()" aria-label="Ouvrir les options des cours">
+                <ion-icon name="settings-outline" slot="icon-only" aria-hidden="true"></ion-icon>
               </ion-button>
             </div>
 
@@ -103,7 +117,7 @@
               </ion-button>
               <ion-button fill="clear" size="small" (click)="uncheckAllCourses()" expand="block">
                 <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Aucun filtre
+                Tout décocher
               </ion-button>
             </div>
 
@@ -122,6 +136,7 @@
                   [(ngModel)]="c.checked"
                   (ionChange)="onCourseToggle(c)"
                   class="course-checkbox"
+                  aria-label="Afficher le cours {{ c.name }}"
                 ></ion-checkbox>
 
                 <ion-label>{{ c.name }}</ion-label>
@@ -145,7 +160,8 @@
               placeholder="Rechercher…"
               [(ngModel)]="roomQuery"
               (ionInput)="filterRooms()"
-              debounce="200">
+              debounce="200"
+              aria-label="Rechercher une salle">
             </ion-searchbar>
 
             <div class="room-list">
@@ -157,8 +173,44 @@
                   [class.active]="r === selectedRoom"
                   (click)="selectRoom(r)"
                 >
-                  <ion-icon name="business-outline" slot="start"></ion-icon>
+                  <ion-icon name="business-outline" slot="start" aria-hidden="true"></ion-icon>
                   <ion-label>{{ r }}</ion-label>
+                </ion-item>
+              </ion-list>
+            </div>
+
+          </ng-container>
+
+          <!-- MODE PROFESSEUR -->
+          <ng-container *ngIf="viewMode === 'teacher'">
+
+            <div class="filter-header">
+              <h3>Option des professeurs</h3>
+              <ion-badge *ngIf="selectedTeacher" class="room-badge">
+                {{ selectedTeacher }}
+              </ion-badge>
+            </div>
+
+            <ion-searchbar
+              class="room-search"
+              placeholder="Rechercher…"
+              [(ngModel)]="teacherQuery"
+              (ionInput)="filterTeachers()"
+              debounce="200"
+              aria-label="Rechercher un professeur">
+            </ion-searchbar>
+
+            <div class="room-list">
+              <ion-list lines="none">
+                <ion-item
+                  button
+                  *ngFor="let t of filteredTeachers"
+                  class="room-item"
+                  [class.active]="t === selectedTeacher"
+                  (click)="selectTeacher(t)"
+                >
+                  <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+                  <ion-label>{{ t }}</ion-label>
                 </ion-item>
               </ion-list>
             </div>
@@ -167,8 +219,8 @@
 
         </div>
 
-      </ion-col>
+      </div>
 
-    </ion-row>
+    </div>
   </ion-grid>
 </ion-content>
