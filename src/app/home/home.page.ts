@@ -45,16 +45,13 @@ selectedTeacher: string | null = null;
   // Valeur sélectionnée pour l'`ion-datetime` (ISO string)
   selectedDate: string = new Date().toISOString();
 
-  // Mode daltonisme
-  daltonismMode: boolean = true;
-
   // Définition des palettes de couleurs - Palette pastel harmonieuse
   colors = {
-    blue:   { bg: '#e0f0fa', border: '#7fb3d5', text: '#2c5aa0' },
-    green:  { bg: '#faded7', border: '#f5a892', text: '#9d3c2a' },
-    yellow: { bg: '#fdf3d6', border: '#f5dc7d', text: '#8b7500' },
-    cyan:   { bg: '#d6f5f2', border: '#7dd9d0', text: '#2d8076' },
-    gray:   { bg: '#ebe9f2', border: '#c9c6e3', text: '#5d5a7f' }
+    blue:   { bg: '#e0f0fa', border: '#4a90d9', text: '#2c5aa0' },
+    green:  { bg: '#faded7', border: '#e5746f', text: '#9d3c2a' },
+    yellow: { bg: '#fdf3d6', border: '#d4af37', text: '#8b7500' },
+    cyan:   { bg: '#d6f5f2', border: '#4ab8a8', text: '#2d8076' },
+    gray:   { bg: '#ebe9f2', border: '#9b97d1', text: '#5d5a7f' }
   };
 
 
@@ -665,8 +662,6 @@ constructor(
 
   // Applique le mode daltonisme ou revient aux couleurs normales
   toggleDaltonismMode(enabled: boolean) {
-    this.daltonismMode = enabled;
-    console.log('[HomePage] Daltonism mode toggled:', enabled);
 
     if (!this.calendarComponent) return;
     const api = this.calendarComponent.getApi();
@@ -772,7 +767,6 @@ constructor(
         onColorChange: onColorChange,
         onDaltonismToggle: onDaltonismToggle,
         onResetColors: onResetColors,
-        daltonismMode: this.daltonismMode,
         courseColorKeys: this.courseColorKeys,
         customCourseColors: this.customCourseColors,
         colors: this.colors,
@@ -785,9 +779,6 @@ constructor(
 
     if (res && res.data && res.data.courses) {
       const updated: Array<any> = res.data.courses;
-      if (res.data.daltonismMode !== undefined) {
-        this.daltonismMode = res.data.daltonismMode;
-      }
 
       updated.forEach(u => {
         const prev = this.courses.find(c => c.name === u.name);

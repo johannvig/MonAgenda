@@ -37,7 +37,6 @@ export class CourseSettingsComponent implements OnInit {
     // shallow clone
     this.localCourses = this.courses.map(c => ({ ...c }));
     // Initialize daltonismEnabled with the passed value
-    this.daltonismEnabled = this.daltonismMode;
     console.log('[CourseSettings] localCourses after map:', this.localCourses);
     console.log('[CourseSettings] daltonismEnabled initialized to:', this.daltonismEnabled);
   }

@@ -604,19 +604,6 @@ export class HomePage {
   // Récupère la palette de couleurs appropriée pour un cours selon le mode
   private getColorPaletteForCourse(courseName: string, originalColorKey: string): { bg: string; border: string; text: string } {
     // Si daltonisme ON
-    if (this.daltonismMode) {
-      const palette = this.colorsDaltonism;
-      const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
-      return (palette as any)[colorKey];
-    }
-
-    // Si daltonisme OFF: utiliser couleur perso si elle existe
-    if (this.customCourseColors.has(courseName)) {
-      const customColor = this.customCourseColors.get(courseName)!;
-      const textColor = getContrastTextColor(customColor);
-      return { bg: customColor, border: customColor, text: textColor };
-    }
-
     // Sinon palette normale
     const palette = this.colors;
     const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
@@ -625,7 +612,6 @@ export class HomePage {
 
   // Applique le mode daltonisme ou revient aux couleurs normales
   toggleDaltonismMode(enabled: boolean) {
-    this.daltonismMode = enabled;
     console.log('[HomePage] Daltonism mode toggled:', enabled);
 
     if (!this.calendarComponent) return;
@@ -732,11 +718,9 @@ export class HomePage {
         onColorChange: onColorChange,
         onDaltonismToggle: onDaltonismToggle,
         onResetColors: onResetColors,
-        daltonismMode: this.daltonismMode,
         courseColorKeys: this.courseColorKeys,
         customCourseColors: this.customCourseColors,
         colors: this.colors,
-        colorsDaltonism: this.colorsDaltonism,
         getContrastTextColor: getContrastTextColor
       }
     });
@@ -746,9 +730,6 @@ export class HomePage {
 
     if (res && res.data && res.data.courses) {
       const updated: Array<any> = res.data.courses;
-      if (res.data.daltonismMode !== undefined) {
-        this.daltonismMode = res.data.daltonismMode;
-      }
 
       updated.forEach(u => {
         const prev = this.courses.find(c => c.name === u.name);
