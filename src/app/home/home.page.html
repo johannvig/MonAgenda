@@ -82,6 +82,17 @@
               </ion-button>
             </div>
 
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <ion-button fill="clear" size="small" (click)="checkAllCourses()" expand="block">
+                <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                Tout cocher
+              </ion-button>
+              <ion-button fill="clear" size="small" (click)="uncheckAllCourses()" expand="block">
+                <ion-icon name="refresh-outline" slot="start"></ion-icon>
+                Aucun filtre
+              </ion-button>
+            </div>
+
             <ion-list lines="none">
               <ion-item
                 *ngFor="let c of courses"

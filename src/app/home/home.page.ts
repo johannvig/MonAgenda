@@ -965,6 +965,15 @@ onCourseToggle(course: { name: string; colorFill: string; colorBorder?: string; 
   this.applyFiltersToCalendar();
 }
 
+uncheckAllCourses() {
+  this.courses.forEach(course => course.checked = false);
+  this.applyFiltersToCalendar();
+}
+
+checkAllCourses() {
+  this.courses.forEach(course => course.checked = true);
+  this.applyFiltersToCalendar();
+}
 
   rebuildCoursesForVisibleRange(start: Date, end: Date) {
     const s = start instanceof Date ? start : new Date(start as any);
