@@ -1018,6 +1018,18 @@ checkAllCourses() {
     }
   }
 
+  prevWeek() {
+    if (this.calendarComponent) {
+      this.calendarComponent.getApi().prev();
+    }
+  }
+
+  nextWeek() {
+    if (this.calendarComponent) {
+      this.calendarComponent.getApi().next();
+    }
+  }
+
   changeDate(event: any) {
     const selectedDate = event.detail.value;
     this.selectedDate = selectedDate;
