@@ -95,7 +95,6 @@
     // On répartit l'espace : Titre en haut, Heure en bas
     justify-content: space-between; 
     height: 100%; width: 100%;
-    color: #333333;
     
     // PADDING MINIMUM : 2px en haut/bas pour gagner de la place
     padding: 2px 5px; 
@@ -109,7 +108,6 @@
     font-size: 0.75rem; // Légèrement plus petit pour que ça rentre
     line-height: 1;     // Lignes très serrées
     margin-bottom: 1px;
-    color: #333333;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   
@@ -120,8 +118,7 @@
     overflow: hidden;
     
     font-size: 0.65rem; 
-    color: #333333;
-    opacity: 0.9; 
+    opacity: 0.9;  
     line-height: 1; // Lignes serrées
     
     .text-ellipsis {

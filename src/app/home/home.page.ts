@@ -172,9 +172,13 @@ selectRoom(room: string) {
         detailsHtml = `<div>${room}</div><div style="opacity: 0.8">${teacher}</div>`;
       }
 
+      // Calculer la couleur de texte basée sur la luminance du fond
+      const bgColor = event.backgroundColor || '#ffffff';
+      const textColor = getContrastTextColor(bgColor);
+
       return {
         html: `
-          <div class="custom-event-content">
+          <div class="custom-event-content" style="color: ${textColor}">
             <div class="event-title">${event.title}</div>
             <div class="event-details">${detailsHtml}</div>
             <div class="event-time">
