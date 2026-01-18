@@ -36,3 +36,10 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 @import "./app/home/global.scss";
+
+.action-toast {
+  --background: #111827;
+  --color: #ffffff;
+  --border-radius: 12px;
+  --box-shadow: 0 10px 20px rgba(17, 24, 39, 0.18);
+}
