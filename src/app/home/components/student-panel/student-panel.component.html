@@ -1,0 +1,39 @@
+<div class="filter-header">
+  <h3>Option des cours</h3>
+  <ion-button fill="clear" size="small" (click)="openSettings.emit()" aria-label="Ouvrir les options des cours">
+    <ion-icon name="settings-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+  </ion-button>
+</div>
+
+<div class="course-actions">
+  <ion-button fill="clear" size="small" (click)="checkAll.emit()" expand="block">
+    <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+    Tout cocher
+  </ion-button>
+  <ion-button fill="clear" size="small" (click)="uncheckAll.emit()" expand="block">
+    <ion-icon name="refresh-outline" slot="start"></ion-icon>
+    Tout décocher
+  </ion-button>
+</div>
+
+<ion-list lines="none">
+  <ion-item
+    *ngFor="let c of courses"
+    class="course-item"
+    [ngStyle]="{ '--checkbox-color': c.colorBorder || c.colorFill }"
+    button
+    detail="false"
+    (click)="toggleCourseFromItem($event, c)"
+  >
+    <ion-checkbox
+      slot="start"
+      mode="md"
+      [(ngModel)]="c.checked"
+      (ionChange)="courseToggle.emit(c)"
+      class="course-checkbox"
+      aria-label="Afficher le cours {{ c.name }}"
+    ></ion-checkbox>
+
+    <ion-label>{{ c.name }}</ion-label>
+  </ion-item>
+</ion-list>

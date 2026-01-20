@@ -11,100 +11,39 @@
   position: relative;
 }
 
-// 2. HEADERS
-.calendar-top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 12px;
-  flex-wrap: wrap;
-  h2 { font-size: 1.5rem; font-weight: 700; margin: 0; color: #1f2937; letter-spacing: -0.5px; }
-}
-
-.week-nav {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0;
-  padding: 8px 12px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.08);
-}
-
-.week-nav-text {
-  color: #6b7280;
-  font-size: 0.95rem;
-  text-align: center;
-  font-weight: 600;
-  letter-spacing: -0.1px;
-  padding: 0 6px;
-}
-
-.week-nav ion-button {
-  --padding-start: 4px;
-  --padding-end: 4px;
-  --color: #374151;
-}
-
-.week-nav-btn {
-  --color: #ffffff;
-  --background: #60a5fa;
-  --background-hover: #3b82f6;
-  --background-activated: #3b82f6;
-  --border-radius: 999px;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --min-height: 36px;
-  --min-width: 36px;
-}
-
-.filter-header {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-left: 5px;
-  h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: #1f2937; }
-  ion-icon { font-size: 1.2rem; color: #6366f1; }
-}
-
-// 3. CARTES BLANCHES
 .card-white {
-  background: white !important; border-radius: 16px; padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f3f4f6;
-  display: flex; flex-direction: column;
-
-  ion-list { background: transparent !important; padding: 0; }
-  ion-item {
-    --background: transparent !important; --min-height: 40px; --padding-start: 0;
-    font-size: 0.9rem; color: #374151; cursor: pointer;
-    --background-hover: #f9fafb; --color-hover: #374151; 
-  }
+  background: white !important;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
 }
-    // Ensure checked/un-checked background works across Ionic versions by targeting native part
-    ::ng-deep ion-item.checked ion-checkbox::part(native) {
-      background: var(--fill) !important;
-      border-color: var(--border) !important;
-      box-shadow: none !important;
-    }
-    ::ng-deep ion-item:not(.checked) ion-checkbox::part(native) {
-      background: #ffffff !important;
-      border-color: #cbd5e1 !important;
-      box-shadow: none !important;
-    }
+
+.panel-spacing {
+  margin-top: 15px;
+}
 
 // 4. LAYOUT COLONNE GAUCHE (Fix hauteur min)
 .calendar-col {
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 100%;
   width: 100%;
   max-width: 100%;
   padding: 5px;
   min-width: 0;
-  .calendar-top-header { flex-shrink: 0; }
+
   .card-white {
-    flex-grow: 1; min-height: 200px; 
-    full-calendar { flex-grow: 1; height: 100%; min-height: 100%; }
+    flex-grow: 1;
+    min-height: 200px;
+
+    full-calendar {
+      flex-grow: 1;
+      height: 100%;
+      min-height: 100%;
+    }
   }
 }
 
@@ -171,14 +110,25 @@
   }
 }
 
+@media (max-width: 992px) {
+  .card-white {
+    padding: 12px;
+  }
+}
+
 // 5. SURCHARGES GLOBALES
 ::ng-deep {
-
-  // A. Petit Calendrier (Reste inchangé)
+  // A. Petit Calendrier
   ion-datetime {
-    --background: white; --ion-text-color: #1f2937; border-radius: 10px; margin: 0 auto;
-    --wheel-fade-background-rgb: 255, 255, 255; --wheel-highlight-background: #f3f4f6; --wheel-text-color: #374151;
+    --background: white;
+    --ion-text-color: #1f2937;
+    border-radius: 10px;
+    margin: 0 auto;
+    --wheel-fade-background-rgb: 255, 255, 255;
+    --wheel-highlight-background: #f3f4f6;
+    --wheel-text-color: #374151;
     color: #1f2937;
+
     &::part(calendar-day) { color: #1f2937; font-weight: 500; }
     &::part(calendar-day active) { color: white; background-color: var(--ion-color-primary); border-radius: 50%; }
     &::part(calendar-weekday) { color: #6b7280; font-weight: 600; }
@@ -187,7 +137,7 @@
     &::part(calendar-month-year) { color: #1f2937; }
   }
 
-  // B. Grand Calendrier (Reste inchangé)
+  // B. Grand Calendrier
   .fc-timegrid-slot { height: 10px !important; }
   .fc-timegrid-slot-label-cushion { font-size: 0.8rem; color: #9ca3af; font-weight: 500; }
   .fc-timegrid-slot-label { border: none !important; }
@@ -198,18 +148,17 @@
   .fc-scrollgrid { border: none !important; }
   .fc-timegrid-now-indicator-line { border-top: 2.5px solid #ef4444 !important; }
 
-
-  // --- C. DESIGN DES COURS (COMPRESSÉ POUR PETITS CRÉNEAUX) ---
-  
+  // C. Design des cours
   .fc-event {
-    box-shadow: none !important; 
-    border-left-width: 4px !important; border-left-style: solid !important;
-    border-radius: 6px !important; 
-    overflow: hidden; 
+    box-shadow: none !important;
+    border-left-width: 4px !important;
+    border-left-style: solid !important;
+    border-radius: 6px !important;
+    overflow: hidden;
     padding: 0;
     transition: all 0.2s ease;
     cursor: pointer !important;
-    
+
     &:hover {
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18) !important;
       transform: translateY(-0.5px);
@@ -218,40 +167,39 @@
   }
 
   .custom-event-content {
-    display: flex; 
-    flex-direction: column; 
-    // On répartit l'espace : Titre en haut, Heure en bas
-    justify-content: space-between; 
-    height: 100%; width: 100%;
-    
-    // PADDING MINIMUM : 2px en haut/bas pour gagner de la place
-    padding: 2px 5px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    padding: 2px 5px;
     box-sizing: border-box;
     position: relative;
   }
 
-  // 1. LE TITRE
-  .event-title { 
-    flex-shrink: 0; // Ne jamais rétrécir le titre
-    font-weight: 700; 
-    font-size: 0.75rem; // Légèrement plus petit pour que ça rentre
-    line-height: 1;     // Lignes très serrées
+  .event-title {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 0.75rem;
+    line-height: 1;
     margin-bottom: 1px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  
-  // 2. LES DÉTAILS (Salle - Prof)
-  .event-details { 
-    flex-shrink: 1; // C'est lui qui rétrécit si manque de place
+
+  .event-details {
+    flex-shrink: 1;
     min-height: 0;
     overflow: hidden;
-    
-    font-size: 0.65rem; 
-    opacity: 0.9;  
-    line-height: 1; // Lignes serrées
-    
+    font-size: 0.65rem;
+    opacity: 0.9;
+    line-height: 1;
+
     .text-ellipsis {
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
@@ -272,223 +220,24 @@
     line-height: 1;
     flex-shrink: 0;
   }
-  
-  // 3. L'HEURE (Prioritaire)
+
   .event-time {
-    flex-shrink: 0; // Ne jamais disparaître !
-    margin-top: 1px; // Juste un petit espace
-    
-    display: flex; align-items: center; gap: 4px;
-    font-size: 0.7rem; 
-    font-weight: normal; 
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: normal;
     opacity: 1;
-    
-    svg { opacity: 0.8; width: 11px; height: 11px; display: block; }
-  }
-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Switch Étudiant / Salle */
-.view-switch {
-  margin-bottom: 10px;
-
-  ion-segment {
-    --background: #f3f4f6;
-    border-radius: 12px;
-    padding: 4px;
-  }
-
-  ion-segment-button {
-    --border-radius: 10px;
-    --color: #6b7280;
-    --color-checked: #111827;
-    --indicator-color: #ffffff;
-    font-weight: 600;
-  }
-}
-
-/* CHECKBOX COURS (meme couleur que le cours) */
-.course-checkbox {
-  --size: 26px;
-  --border-radius: 8px;
-  --checkmark-color: #ffffff;
-}
-
-/* non coché : fond blanc, bordure couleur */
-.course-checkbox::part(container) {
-  background: #ffffff !important;
-  border: 2px solid var(--checkbox-color) !important;
-  box-shadow: none !important;
-}
-
-/* coché : fond couleur, bordure même couleur */
-.course-checkbox.checkbox-checked::part(container) {
-  background: var(--checkbox-color) !important;
-  border: 2px solid var(--checkbox-color) !important;
-}
-
-/* SALLES */
-.room-badge {
-  --background: #eef2ff;
-  --color: #3730a3;
-  border-radius: 999px;
-  font-weight: 600;
-}
-
-.room-search {
-  --background: #f9fafb;
-  --box-shadow: none;
-  --border-radius: 12px;
-  padding: 0;
-}
-
-.room-list {
-  max-height: 260px;
-  overflow: auto;
-  margin-top: 8px;
-  border-radius: 12px;
-}
-
-.room-item {
-  --background: transparent;
-  --padding-start: 6px;
-
-  ion-icon {
-    color: #6b7280;
-    margin-right: 6px;
-  }
-
-  &.active {
-    --background: #eef2ff;
-    border-radius: 10px;
-
-    ion-label {
-      font-weight: 700;
-      color: #1e40af;
-    }
-
-    ion-icon {
-      color: #1e40af;
+    svg {
+      opacity: 0.8;
+      width: 11px;
+      height: 11px;
+      display: block;
     }
   }
-}
-
-
-
-// teacher 
-
-.teacher-link {
-  /* reset bouton navigateur */
-  appearance: none;
-  -webkit-appearance: none;
-
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-
-  padding: 0 !important;
-  margin: 0 !important;
-
-  width: fit-content;          /* évite la barre pleine largeur */
-  display: inline-block;
-  align-self: center;          /* centre dans ta colonne */
-
-  cursor: pointer;
-  color: #1e40af;
-
-  outline: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.teacher-link:focus,
-.teacher-link:active {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.teacher-link:focus-visible {
-  outline: 2px solid #1e40af;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-.teacher-link:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 992px) {
-  .calendar-top-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .week-nav {
-    justify-content: space-between;
-  }
-
-  .card-white {
-    padding: 12px;
-  }
-
-  .room-list {
-    max-height: 200px;
-  }
-}
-
-@media (max-width: 600px) {
-  .calendar-top-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .calendar-top-header {
-    align-items: stretch;
-  }
-
-  .week-nav {
-    width: 100%;
-    gap: 10px;
-    padding: 10px 12px;
-  }
-
-  .week-nav-text {
-    font-size: 0.85rem;
-  }
-
-  .calendar-top-header ion-button[color="primary"] {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-
-/* badge rouge sur la cloche */
-ion-button {
-  position: relative;
-}
-
-.notif-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  line-height: 18px;
 }
 
 /* style de la toast pour ressembler à une notif */
@@ -496,7 +245,7 @@ ion-button {
   --background: #ffffff;
   --color: #111827;
   --border-radius: 14px;
-  --box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+  --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
   --width: 420px;
 }
 
@@ -505,5 +254,5 @@ ion-button {
 }
 
 ::ng-deep .fake-notif-toast ion-icon {
-  color: #f59e0b; /* orange warning */
+  color: #f59e0b;
 }

@@ -1,0 +1,30 @@
+<div class="filter-header">
+  <h3>Option des salles</h3>
+  <ion-badge *ngIf="selectedRoom" class="room-badge">
+    {{ selectedRoom }}
+  </ion-badge>
+</div>
+
+<ion-searchbar
+  class="room-search"
+  placeholder="Rechercher…"
+  [(ngModel)]="roomQuery"
+  (ionInput)="onRoomInput($event)"
+  debounce="200"
+  aria-label="Rechercher une salle">
+</ion-searchbar>
+
+<div class="room-list">
+  <ion-list lines="none">
+    <ion-item
+      button
+      *ngFor="let r of filteredRooms"
+      class="room-item"
+      [class.active]="r === selectedRoom"
+      (click)="selectRoom.emit(r)"
+    >
+      <ion-icon name="business-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ r }}</ion-label>
+    </ion-item>
+  </ion-list>
+</div>

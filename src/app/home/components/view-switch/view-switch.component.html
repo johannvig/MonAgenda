@@ -1,0 +1,22 @@
+<div class="view-switch">
+  <ion-segment [value]="viewMode" (ionChange)="onSegmentChange($event)">
+    <ion-segment-button value="student">
+      <ion-label>Étudiant</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="room">
+      <ion-label>Salle</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="teacher">
+      <ion-label>Professeur</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+</div>
+
+<ion-datetime
+  presentation="date"
+  color="primary"
+  [value]="selectedDate"
+  firstDayOfWeek="1"
+  (ionChange)="dateChange.emit($event)"
+  aria-label="Sélectionner une date">
+</ion-datetime>

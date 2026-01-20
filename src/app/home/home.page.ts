@@ -1,52 +1,16 @@
 import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CalendarOptions } from '@fullcalendar/core';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import frLocale from '@fullcalendar/core/locales/fr';
-import { AlertController, ModalController, ToastController } from '@ionic/angular';
+import { ModalController, ToastController } from '@ionic/angular';
 import { FullCalendarComponent } from '@fullcalendar/angular';
 import { getWeek } from 'date-fns';
 
-// Assurez-vous d'avoir créé ce fichier comme indiqué à l'étape précédente
-import { EventDetailComponent } from './event-detail.component';
-
-// Utility: detect if a color is too dark and return appropriate text color
-function getContrastTextColor(hexColor: string): string {
-  // Remove # if present
-  const hex = hexColor.replace('#', '');
-
-  // Convert hex to RGB
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-
-  // Calculate luminance using relative luminance formula (WCAG)
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-  // If luminance < 0.5, background is dark, use white text
-  return luminance < 0.5 ? '#ffffff' : '#000000';
-}
-
-function getEventKey(title: string, start: any, end: any): string {
-  const s = start ? new Date(start).getTime() : 0;
-  const e = end ? new Date(end).getTime() : 0;
-  return `${title}__${s}__${e}`;
-}
-
-function getAccentBorderColor(hexColor: string): string {
-  const hex = hexColor.replace('#', '');
-  if (hex.length !== 6) return hexColor;
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-  const adjust = luminance < 0.5 ? 40 : -40;
-  const clamp = (v: number) => Math.min(255, Math.max(0, v));
-  const toHex = (v: number) => clamp(v).toString(16).padStart(2, '0');
-  return `#${toHex(r + adjust)}${toHex(g + adjust)}${toHex(b + adjust)}`;
-}
+import { BASE_COLORS, DALTONISM_COLORS } from './data/color-palettes';
+import type { CourseItem, ColorKey, ColorPaletteSet } from './models/calendar.models';
+import { createCalendarOptions } from './state/calendar-options';
+import { buildCoursesFromEvents, rebuildCoursesForVisibleRange, applyFiltersToCalendar } from './state/course-state';
+import { openCourseSettingsModal } from './state/course-settings-modal';
+import { openEventDetailsModal } from './state/event-modal';
+import { toggleDaltonismMode as applyDaltonismMode } from './state/course-colors';
 
 @Component({
   selector: 'app-home',
@@ -66,23 +30,9 @@ selectedTeacher: string | null = null;
   // Valeur sélectionnée pour l'`ion-datetime` (ISO string)
   selectedDate: string = new Date().toISOString();
 
-  // Définition des palettes de couleurs - Palette pastel harmonieuse
-  colors = {
-    blue:   { bg: '#e0f0fa', border: '#4a90d9', text: '#2c5aa0' },
-    green:  { bg: '#faded7', border: '#e5746f', text: '#9d3c2a' },
-    yellow: { bg: '#fdf3d6', border: '#d4af37', text: '#8b7500' },
-    cyan:   { bg: '#d6f5f2', border: '#4ab8a8', text: '#2d8076' },
-    gray:   { bg: '#ebe9f2', border: '#9b97d1', text: '#5d5a7f' }
-  };
-
-  // Palette daltonisme (contrastes renforces, couleurs plus distinctes)
-  colorsDaltonism = {
-    blue:   { bg: '#dceef9', border: '#0072b2', text: '#0b3d91' },
-    green:  { bg: '#e6f7f1', border: '#009e73', text: '#056449' },
-    yellow: { bg: '#fff6c2', border: '#f0e442', text: '#7a6a00' },
-    cyan:   { bg: '#e1f2ff', border: '#56b4e9', text: '#0b5a8f' },
-    gray:   { bg: '#efeff5', border: '#8e8dbe', text: '#4a4a6a' }
-  };
+  // Définition des palettes de couleurs (centralisées)
+  colors: ColorPaletteSet = BASE_COLORS;
+  colorsDaltonism: ColorPaletteSet = DALTONISM_COLORS;
 
   daltonismMode: boolean = false;
 
@@ -108,14 +58,30 @@ private resizeRaf: number | null = null;
 ngOnInit() {
   this.filteredRooms = [...this.rooms];
   this.filteredTeachers = [...this.teachers];
+
+  this.calendarOptions = createCalendarOptions({
+    selectedDate: this.selectedDate,
+    colors: this.colors,
+    onDatesSet: (start: Date, end: Date) => {
+      this.currentWeek = getWeek(start, { weekStartsOn: 1 });
+      this.currentYear = start.getFullYear();
+      rebuildCoursesForVisibleRange(this);
+    },
+    onEventClick: (event) => this.openEventDetails(event)
+  });
+
+  const events = (this.calendarOptions as any).events || [];
+  buildCoursesFromEvents(this, events);
 }
 
-onViewModeChange() {
+onViewModeChange(nextMode?: 'student' | 'room' | 'teacher') {
+  if (nextMode) {
+    this.viewMode = nextMode;
+  }
   if (this.viewMode !== 'teacher') {
-  this.selectedTeacher = null;
-}
-this.applyFiltersToCalendar();
-
+    this.selectedTeacher = null;
+  }
+  this.applyFiltersToCalendar();
 }
 
 
@@ -285,550 +251,21 @@ private scheduleCalendarResize(force: boolean) {
 }
 
 
-  calendarOptions: CalendarOptions = {
-    
-    plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
-    initialView: 'timeGridWeek',
-    locale: frLocale,
-    headerToolbar: false,
-    weekends: false,
-    // initialDate: use the selectedDate (initialised to today) so the calendar opens on the current date
-    initialDate: this.selectedDate,
-
-    // --- HORAIRES & TAILLE ---
-    slotMinTime: '08:00:00',
-    slotMaxTime: '18:00:00',
-    slotDuration: '00:15:00',
-    slotLabelInterval: '01:00',
-    allDaySlot: false,
-    nowIndicator: true,
-
-    aspectRatio: 1.5,
-
-    height: '90%',        // Force le calendrier à respecter la hauteur du parent
-    contentHeight: 'auto',
-    expandRows: false,
-    displayEventTime: false,
-
-    slotLabelFormat: {
-      hour: '2-digit', minute: '2-digit', omitZeroMinute: false, meridiem: false
-    },
-
-    dayHeaderFormat: { weekday: 'long', day: 'numeric' },
-
-    datesSet: (dateInfo) => {
-      this.currentWeek = getWeek(dateInfo.start, { weekStartsOn: 1 });
-      this.currentYear = dateInfo.start.getFullYear();
-      try {
-        (this as any).rebuildCoursesForVisibleRange?.(dateInfo.start, dateInfo.end);
-      } catch (e) {
-        // defensive: ignore if method is not available for any reason
-      }
-    },
-
-    // --- GESTION DU CLIC SUR UN ÉVÉNEMENT (NOUVEAU) ---
-    eventClick: (info) => {
-      info.jsEvent.preventDefault(); // Empêche le comportement par défaut
-      this.openEventDetails(info.event);
-    },
-
-    // --- DESIGN DES COURS ---
-    eventContent: (arg) => {
-      const event = arg.event;
-
-      let myTimeText = '';
-      if (event.start && event.end) {
-        const formatOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
-        const startStr = event.start.toLocaleTimeString('fr-FR', formatOptions);
-        const endStr = event.end.toLocaleTimeString('fr-FR', formatOptions);
-        myTimeText = `${startStr} - ${endStr}`;
-      }
-
-      const room = event.extendedProps['room'] || '';
-      const teacher = event.extendedProps['teacher'] || '';
-
-      let durationMinutes = 0;
-      if (event.start && event.end) {
-        const diffMs = event.end.getTime() - event.start.getTime();
-        durationMinutes = diffMs / (1000 * 60);
-      }
-
-      let detailsHtml = '';
-
-      if (durationMinutes <= 60) {
-        // Mode compact
-        if(room && teacher) {
-           detailsHtml = `<div class="text-ellipsis">${room} - ${teacher}</div>`;
-        } else {
-           detailsHtml = `<div class="text-ellipsis">${room}${teacher}</div>`;
-        }
-      } else {
-        // Mode normal
-        detailsHtml = `<div>${room}</div><div style="opacity: 0.8">${teacher}</div>`;
-      }
-
-      // Calculer la couleur de texte basée sur la luminance du fond
-      const bgColor = event.backgroundColor || '#ffffff';
-      const textColor = getContrastTextColor(bgColor);
-      const hasNote = !!event.extendedProps?.['note'];
-      const noteBadge = hasNote ? '<span class="note-indicator" aria-hidden="true">N</span>' : '';
-
-      return {
-        html: `
-          <div class="custom-event-content" style="color: ${textColor}">
-            <div class="event-title">${event.title}</div>
-            <div class="event-details">${detailsHtml}</div>
-            <div class="event-time">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              ${myTimeText}
-            </div>
-            ${noteBadge}
-          </div>
-        `
-      };
-    },
-
-    // --- DONNÉES DE L'EMPLOI DU TEMPS ---
-    events: [
-      // =========================
-      // SEMAINE 1 — 05 → 09 JAN
-      // =========================
-
-      // LUNDI 05
-      {
-        title: 'APSA',
-        start: '2026-01-05T08:00:00', end: '2026-01-05T10:00:00',
-        extendedProps: { room: '-', teacher: null },
-        backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - Cours2',
-        start: '2026-01-05T11:00:00', end: '2026-01-05T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-05T13:30:00', end: '2026-01-05T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-05T15:00:00', end: '2026-01-05T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-05T16:30:00', end: '2026-01-05T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // MARDI 06
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-06T08:00:00', end: '2026-01-06T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-06T09:30:00', end: '2026-01-06T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-06T11:00:00', end: '2026-01-06T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-
-      // MERCREDI 07
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-07T08:00:00', end: '2026-01-07T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-07T09:30:00', end: '2026-01-07T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-07T11:00:00', end: '2026-01-07T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // JEUDI 08
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-08T08:00:00', end: '2026-01-08T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-08T09:30:00', end: '2026-01-08T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-08T11:00:00', end: '2026-01-08T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // VENDREDI 09
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-09T08:00:00', end: '2026-01-09T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-09T09:30:00', end: '2026-01-09T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-09T13:30:00', end: '2026-01-09T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-09T15:00:00', end: '2026-01-09T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-09T16:30:00', end: '2026-01-09T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-
-      // =========================
-      // SEMAINE 2 — 12 → 16 JAN
-      // =========================
-
-      // LUNDI 12
-      {
-        title: 'APSA',
-        start: '2026-01-12T08:00:00', end: '2026-01-12T10:00:00',
-        extendedProps: { room: '-', teacher: null },
-        backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - Cours2',
-        start: '2026-01-12T11:00:00', end: '2026-01-12T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-12T13:30:00', end: '2026-01-12T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-12T15:00:00', end: '2026-01-12T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - Cours1',
-        start: '2026-01-12T16:30:00', end: '2026-01-12T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'PALUD Sébastien' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // MARDI 13
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-13T08:00:00', end: '2026-01-13T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-13T09:30:00', end: '2026-01-13T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-13T11:00:00', end: '2026-01-13T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-13T13:30:00', end: '2026-01-13T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-13T15:00:00', end: '2026-01-13T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-13T16:30:00', end: '2026-01-13T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // MERCREDI 14
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-14T08:00:00', end: '2026-01-14T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-14T09:30:00', end: '2026-01-14T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-14T11:00:00', end: '2026-01-14T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // JEUDI 15
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-15T08:00:00', end: '2026-01-15T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-15T09:30:00', end: '2026-01-15T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Mathématiques discrètes - Cours1',
-        start: '2026-01-15T11:00:00', end: '2026-01-15T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'NOYÉ Jacques' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // VENDREDI 16
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-16T08:00:00', end: '2026-01-16T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-16T09:30:00', end: '2026-01-16T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Débriefing - Cours1',
-        start: '2026-01-16T11:00:00', end: '2026-01-16T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'ROSINOSKY Guillaume / TISI Massimo' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-16T13:30:00', end: '2026-01-16T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-16T15:00:00', end: '2026-01-16T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-      {
-        title: 'Architectures distribuées - Travail personnel (Libre service)',
-        start: '2026-01-16T16:30:00', end: '2026-01-16T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: null },
-        backgroundColor: this.colors.gray.bg, borderColor: this.colors.gray.border, textColor: this.colors.gray.text
-      },
-
-      // =========================
-      // SEMAINE 3 — 19 → 23 JAN
-      // =========================
-
-      // LUNDI 19
-      {
-        title: 'APSA',
-        start: '2026-01-19T08:00:00', end: '2026-01-19T10:00:00',
-        extendedProps: { room: '-', teacher: null },
-        backgroundColor: this.colors.cyan.bg, borderColor: this.colors.cyan.border, textColor: this.colors.cyan.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - Cours2',
-        start: '2026-01-19T11:00:00', end: '2026-01-19T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Conception logicielle - SOUTENANCES',
-        start: '2026-01-19T13:30:00', end: '2026-01-19T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Conception logicielle - SOUTENANCES',
-        start: '2026-01-19T15:00:00', end: '2026-01-19T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Conception logicielle - SOUTENANCES',
-        start: '2026-01-19T16:30:00', end: '2026-01-19T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LEDOUX Thomas / PALUD Sébastien' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-
-      // MARDI 20 (⚠️ salle Charpak sur ton screen)
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-20T08:00:00', end: '2026-01-20T09:15:00',
-        extendedProps: { room: 'NA-G. Charpak (A120) - (VC-200)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Mathématiques de base: méthodes et outil - TD2',
-        start: '2026-01-20T09:30:00', end: '2026-01-20T10:45:00',
-        extendedProps: { room: 'NA-G. Charpak (A120) - (VC-200)', teacher: 'LEMOINE David' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-20T11:00:00', end: '2026-01-20T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-20T13:30:00', end: '2026-01-20T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-20T15:00:00', end: '2026-01-20T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'Compréhension du travail et des entreprises - Cours1',
-        start: '2026-01-20T16:30:00', end: '2026-01-20T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'KIRTCHIK Olessia' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // MERCREDI 21
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-21T08:00:00', end: '2026-01-21T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-21T09:30:00', end: '2026-01-21T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-      {
-        title: 'IHM - Cours1',
-        start: '2026-01-21T11:00:00', end: '2026-01-21T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'DELFORGES ALEXIS' },
-        backgroundColor: this.colors.blue.bg, borderColor: this.colors.blue.border, textColor: this.colors.blue.text
-      },
-
-      // JEUDI 22 : rien sur ton screen
-
-      // VENDREDI 23
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-23T08:00:00', end: '2026-01-23T09:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Anglais (S5)',
-        start: '2026-01-23T09:30:00', end: '2026-01-23T10:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'LE BOTLAN-MARCATO Charlotte' },
-        backgroundColor: this.colors.yellow.bg, borderColor: this.colors.yellow.border, textColor: this.colors.yellow.text
-      },
-      {
-        title: 'Conseil de promotion - Cours1',
-        start: '2026-01-23T11:00:00', end: '2026-01-23T12:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'ROSINOSKY Guillaume / SALAÜN Marine / TISI Massimo' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
-        start: '2026-01-23T13:30:00', end: '2026-01-23T14:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
-        start: '2026-01-23T15:00:00', end: '2026-01-23T16:15:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      },
-      {
-        title: 'Architectures distribuées - EVAL (ORAL PROJET)',
-        start: '2026-01-23T16:30:00', end: '2026-01-23T17:45:00',
-        extendedProps: { room: 'NA-J147 (V-40)', teacher: 'COULLON Hélène' },
-        backgroundColor: this.colors.green.bg, borderColor: this.colors.green.border, textColor: this.colors.green.text
-      }
-    ]
-  };
-
-// Cache : liste des événements réellement affichés (pour restaurer sans recalcul)
-private baseDisplayedEvents: any[] = [];
-
+  calendarOptions!: CalendarOptions;
 
   // Liste des cours créée dynamiquement depuis `calendarOptions.events`.
-  courses: Array<{ name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean; isCustomColor?: boolean }> = [];
+  courses: CourseItem[] = [];
   // Tous les events d'origine (avec baseName) pour pouvoir les (re)ajouter au calendrier
   allEvents: Array<any> = [];
   // Stocke les couleurs personnalisées par cours (nom -> couleur hex)
   customCourseColors: Map<string, string> = new Map();
   // Stocke la clé de couleur originale pour chaque cours (pour pouvoir switcher entre palettes)
-  courseColorKeys: Map<string, string> = new Map();
+  courseColorKeys: Map<string, ColorKey> = new Map();
 
 constructor(
-  private alertCtrl: AlertController,
   private modalCtrl: ModalController,
   private toastCtrl: ToastController
-) {
-  this.buildCoursesFromEvents();
-}
+) {}
 
   private async showActionToast(message: string) {
     const toast = await this.toastCtrl.create({
@@ -861,356 +298,57 @@ toggleDaltonismFromHeader() {
   this.showActionToast(enabled ? 'Mode daltonisme activé.' : 'Mode daltonisme désactivé.');
 }
 
-
-  // Récupère la couleur à utiliser selon le mode et les customisations
-  private getColorForCourse(baseName: string, defaultColor: string): string {
-    if (this.customCourseColors.has(baseName)) {
-      return this.customCourseColors.get(baseName)!;
-    }
-    return defaultColor;
-  }
-
-  // Récupère la palette de couleurs appropriée pour un cours selon le mode
-  private getColorPaletteForCourse(courseName: string, originalColorKey: string): { bg: string; border: string; text: string } {
-    const custom = this.customCourseColors.get(courseName);
-    if (custom) {
-      const textColor = getContrastTextColor(custom);
-      return { bg: custom, border: getAccentBorderColor(custom), text: textColor };
-    }
-
-    // Sinon palette normale
-    const palette = this.daltonismMode ? this.colorsDaltonism : this.colors;
-    const colorKey = (originalColorKey in palette) ? originalColorKey : 'blue';
-    return (palette as any)[colorKey];
-  }
-
-  // Applique le mode daltonisme ou revient aux couleurs normales
   toggleDaltonismMode(enabled: boolean) {
     this.daltonismMode = enabled;
-
-    if (!this.calendarComponent) return;
-    const api = this.calendarComponent.getApi();
-
-    // Mettre à jour les couleurs de tous les événements
-    api.getEvents().forEach(ev => {
-      const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-      const colorKey = this.courseColorKeys.get(evBase) || 'blue';
-      const customCourseColor = this.customCourseColors.get(evBase);
-      const eventKey = getEventKey(ev.title || '', ev.start, ev.end);
-      const stored = this.allEvents.find(e => e.__key === eventKey);
-      const useStoredCustom = !!stored?.customColor && !!stored?.backgroundColor;
-      const palette = this.getColorPaletteForCourse(evBase, colorKey);
-      const bgColor = customCourseColor
-        ? customCourseColor
-        : (useStoredCustom ? (stored.backgroundColor || palette.bg) : palette.bg);
-      const borderColor = customCourseColor
-        ? getAccentBorderColor(customCourseColor)
-        : (useStoredCustom ? (stored.borderColor || getAccentBorderColor(bgColor)) : palette.border);
-      const textColor = customCourseColor
-        ? getContrastTextColor(customCourseColor)
-        : (useStoredCustom ? (stored.textColor || getContrastTextColor(bgColor)) : palette.text);
-
-      try {
-        ev.setProp('backgroundColor', bgColor);
-        ev.setProp('borderColor', borderColor);
-        ev.setProp('textColor', textColor);
-      } catch (err) {
-        console.error('[HomePage] Error updating event color:', err);
-      }
-    });
-
-    // Mettre à jour this.courses pour la liste à droite
-    this.courses.forEach(course => {
-      const customCourseColor = this.customCourseColors.get(course.name);
-      if (customCourseColor) {
-        course.colorFill = customCourseColor;
-        course.colorBorder = getAccentBorderColor(customCourseColor);
-        course.textColor = getContrastTextColor(customCourseColor);
-        return;
-      }
-      const colorKey = this.courseColorKeys.get(course.name) || 'blue';
-      const palette = this.getColorPaletteForCourse(course.name, colorKey);
-      course.colorFill = palette.bg;
-      course.colorBorder = palette.border;
-      course.textColor = palette.text;
+    applyDaltonismMode({
+      daltonismMode: this.daltonismMode,
+      colors: this.colors,
+      colorsDaltonism: this.colorsDaltonism,
+      courseColorKeys: this.courseColorKeys,
+      customCourseColors: this.customCourseColors,
+      allEvents: this.allEvents,
+      courses: this.courses,
+      calendarComponent: this.calendarComponent
     });
   }
 
   // Open the course settings modal
   async openSettings() {
-    console.log('[HomePage] openSettings called, this.courses:', this.courses);
-
-    if (!this.courses || this.courses.length === 0) {
-      this.buildCoursesFromEvents();
-    }
-
-    const coursesToShow = this.courses.map(c => ({ ...c }));
-
-    const onColorChange = (courseName: string, newColor: string) => {
-      this.customCourseColors.set(courseName, newColor);
-
-      if (!this.calendarComponent) return;
-      const api = this.calendarComponent.getApi();
-      const textColor = getContrastTextColor(newColor);
-
-      api.getEvents().forEach(ev => {
-        const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-        if (evBase === courseName) {
-          try {
-            ev.setProp('backgroundColor', newColor);
-            ev.setProp('borderColor', newColor);
-            ev.setProp('textColor', textColor);
-          } catch (err) {
-            console.error('[HomePage] Error updating event color:', err);
-          }
-        }
-      });
-
-      const course = this.courses.find(c => c.name === courseName);
-      if (course) {
-        course.colorFill = newColor;
-        course.textColor = textColor;
-        course.isCustomColor = true;
-      }
-      this.showActionToast(`Couleur appliquée à ${courseName}.`);
-    };
-
-    const onDaltonismToggle = (enabled: boolean) => {
-      this.toggleDaltonismMode(enabled);
-      this.showActionToast(enabled ? 'Mode daltonisme activé.' : 'Mode daltonisme désactivé.');
-    };
-
-    const onResetColors = () => {
-      this.customCourseColors.clear();
-
-      if (!this.calendarComponent) return;
-      const api = this.calendarComponent.getApi();
-
-      this.buildCoursesFromEvents();
-
-      api.getEvents().forEach(ev => {
-        const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-        const course = this.courses.find(c => c.name === evBase);
-
-        if (course) {
-          try {
-            ev.setProp('backgroundColor', course.colorFill);
-            ev.setProp('borderColor', course.colorBorder);
-            ev.setProp('textColor', course.textColor);
-          } catch (err) {
-            console.error('[HomePage] Error updating event:', err);
-          }
-        }
-      });
-      this.showActionToast('Couleurs réinitialisées.');
-    };
-
-    const mod = await import('./course-settings.component');
-    const CourseSettingsComponent = mod.CourseSettingsComponent;
-
-    const modal = await this.modalCtrl.create({
-      component: CourseSettingsComponent,
-      componentProps: {
-        courses: coursesToShow,
-        onColorChange: onColorChange,
-        onDaltonismToggle: onDaltonismToggle,
-        onResetColors: onResetColors,
-        daltonismMode: this.daltonismMode,
-        courseColorKeys: this.courseColorKeys,
-        customCourseColors: this.customCourseColors,
-        colors: this.colors,
-        colorsDaltonism: this.colorsDaltonism,
-        getContrastTextColor: getContrastTextColor
+    await openCourseSettingsModal({
+      modalCtrl: this.modalCtrl,
+      calendarComponent: this.calendarComponent,
+      colors: this.colors,
+      colorsDaltonism: this.colorsDaltonism,
+      daltonismMode: this.daltonismMode,
+      courses: this.courses,
+      allEvents: this.allEvents,
+      customCourseColors: this.customCourseColors,
+      courseColorKeys: this.courseColorKeys,
+      onShowToast: (message: string) => this.showActionToast(message),
+      setAllEvents: (events) => { this.allEvents = events; },
+      onToggleDaltonism: (enabled: boolean) => this.toggleDaltonismMode(enabled),
+      rebuildCoursesFromEvents: () => {
+        const events = (this.calendarOptions as any).events || [];
+        buildCoursesFromEvents(this, events);
       }
     });
-
-    await modal.present();
-    const res = await modal.onWillDismiss();
-
-    if (res && res.data && res.data.courses) {
-      const updated: Array<any> = res.data.courses;
-
-      updated.forEach(u => {
-        const prev = this.courses.find(c => c.name === u.name);
-        if (prev) {
-          prev.colorFill = u.colorFill;
-          prev.textColor = u.textColor;
-          prev.isCustomColor = u.isCustomColor;
-        }
-      });
-
-      if (this.calendarComponent) {
-        const api = this.calendarComponent.getApi();
-
-        this.allEvents = this.allEvents.map(ev => {
-          const base = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-          const newCourse = updated.find(u => u.name === base);
-          if (newCourse) {
-            return { ...ev, backgroundColor: newCourse.colorFill };
-          }
-          return ev;
-        });
-
-        api.getEvents().forEach(ev => {
-          const base = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-          const newCourse = updated.find(u => u.name === base);
-          if (newCourse) {
-            try { ev.setProp('backgroundColor', newCourse.colorFill); } catch (err) {}
-            try { ev.setProp('borderColor', newCourse.colorBorder || newCourse.colorFill); } catch (err) {}
-          }
-        });
-      }
-    }
   }
 
-  // Construit `this.courses` depuis les events du calendrier.
-  buildCoursesFromEvents() {
-    const evts: any[] = (this.calendarOptions && (this.calendarOptions as any).events) || [];
-    this.allEvents = evts.map(ev => ({
-      ...ev,
-      baseName: (ev.title || '').replace(/\s*\(.*\)/, '').trim(),
-      __key: getEventKey(ev.title || '', ev.start, ev.end),
-      customColor: false
-    }));
-    const map = new Map<string, { name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean }>();
-
-    evts.forEach(ev => {
-      if (!ev || !ev.title) return;
-      const baseName = ev.title.replace(/\s*\(.*\)/, '').trim();
-      if (!baseName) return;
-      if (!map.has(baseName)) {
-        const colorBorder = ev.borderColor || ev.extendedProps?.borderColor || this.colors.blue.border;
-        const colorFill = ev.backgroundColor || ev.background || ev.extendedProps?.backgroundColor || colorBorder || this.colors.blue.bg;
-        const textColor = getContrastTextColor(colorFill);
-        map.set(baseName, { name: baseName, colorFill: colorFill, colorBorder: colorBorder, textColor: textColor, checked: true });
-
-        let colorKey = 'blue';
-        let colorFound = false;
-        const palettes = [this.colors, this.colorsDaltonism] as any[];
-        for (const palette of palettes) {
-          for (const [key, colorObj] of Object.entries(palette)) {
-            if ((colorObj as any).bg === colorFill) {
-              colorKey = key;
-              colorFound = true;
-              break;
-            }
-          }
-          if (colorFound) break;
-        }
-        this.courseColorKeys.set(baseName, colorKey);
-      }
-    });
-
-    this.courses = Array.from(map.values());
-    // ---- Construire la liste des salles depuis tous les events ----
-const roomSet = new Set<string>();
-(this.allEvents || []).forEach(ev => {
-  const r = (ev?.extendedProps?.room || '').toString().trim();
-  if (r && r !== '-') roomSet.add(r);
-});
-
-this.rooms = Array.from(roomSet).sort((a, b) => a.localeCompare(b));
-this.filteredRooms = [...this.rooms];
-
-// ---- Construire la liste des professeurs depuis tous les events ----
-const teacherSet = new Set<string>();
-(this.allEvents || []).forEach(ev => {
-  const t = (ev?.extendedProps?.teacher || '').toString().trim();
-  if (t && t !== '-') teacherSet.add(t);
-});
-
-this.teachers = Array.from(teacherSet).sort((a, b) => a.localeCompare(b));
-this.filteredTeachers = [...this.teachers];
-
-  }
   private applyFiltersToCalendar() {
-  if (!this.calendarComponent) return;
-  const api = this.calendarComponent.getApi();
-
-  // on repart de la source de vérité : allEvents
-  api.removeAllEvents();
-
-  // 1) MODE SALLE : afficher uniquement la salle sélectionnée
-  if (this.viewMode === 'room') {
-    if (!this.selectedRoom) return;
-
-    const filtered = this.allEvents.filter(ev => {
-      const r = (ev?.extendedProps?.room || '').toString().trim();
-      return r === this.selectedRoom;
+    applyFiltersToCalendar({
+      context: this,
+      viewMode: this.viewMode,
+      selectedRoom: this.selectedRoom,
+      selectedTeacher: this.selectedTeacher,
+      calendarComponent: this.calendarComponent,
+      customCourseColors: this.customCourseColors
     });
-
-    filtered.forEach(e => api.addEvent({
-      title: e.title,
-      start: e.start,
-      end: e.end,
-      extendedProps: e.extendedProps,
-      backgroundColor: e.backgroundColor,
-      borderColor: e.borderColor,
-      textColor: e.textColor
-    }));
-
-    return;
   }
-
-  // MODE ENSEIGNANT
-if (this.viewMode === 'teacher') {
-  if (!this.selectedTeacher) return;
-
-  const filtered = this.allEvents.filter(ev => {
-    const t = (ev?.extendedProps?.teacher || '').toString().trim();
-    return t === this.selectedTeacher;
-  });
-
-  filtered.forEach(e => api.addEvent({
-    title: e.title,
-    start: e.start,
-    end: e.end,
-    extendedProps: e.extendedProps,
-    backgroundColor: e.backgroundColor,
-    borderColor: e.borderColor,
-    textColor: e.textColor
-  }));
-
-  return;
-}
-  // 2) MODE ETUDIANT : afficher uniquement les cours cochés
-  const checkedCourses = new Set(
-    (this.courses || []).filter(c => c.checked).map(c => c.name)
-  );
-
-  const filtered = this.allEvents.filter(e => checkedCourses.has(e.baseName));
-
-  filtered.forEach(e => {
-    const colorKey = this.courseColorKeys.get(e.baseName) || 'blue';
-    const palette = this.getColorPaletteForCourse(e.baseName, colorKey);
-    const bgColor = e.customColor ? (e.backgroundColor || palette.bg) : palette.bg;
-    const borderColor = e.customColor ? (e.borderColor || palette.border) : palette.border;
-    const textColor = e.customColor ? (e.textColor || palette.text) : palette.text;
-
-    api.addEvent({
-      title: e.title,
-      start: e.start,
-      end: e.end,
-      extendedProps: e.extendedProps,
-      backgroundColor: bgColor,
-      borderColor: borderColor,
-      textColor: textColor
-    });
-  });
-
-}
 
 
 onCourseToggle(course: { name: string; colorFill: string; colorBorder?: string; checked: boolean }) {
   if (this.viewMode !== 'student') return; // en mode salle, on ignore
   this.applyFiltersToCalendar();
-}
-
-toggleCourseFromItem(event: Event, course: { name: string; colorFill: string; colorBorder?: string; checked: boolean }) {
-  const target = event.target as HTMLElement | null;
-  if (target?.closest('ion-checkbox')) return;
-  course.checked = !course.checked;
-  this.onCourseToggle(course);
 }
 
 uncheckAllCourses() {
@@ -1222,28 +360,6 @@ checkAllCourses() {
   this.courses.forEach(course => course.checked = true);
   this.applyFiltersToCalendar();
 }
-
-  rebuildCoursesForVisibleRange(start: Date, end: Date) {
-    const evts = this.allEvents || [];
-
-    const map = new Map<string, { name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean }>();
-
-    evts.forEach(ev => {
-      if (!ev || !ev.title) return;
-      const baseName = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-      if (!baseName) return;
-      if (!map.has(baseName)) {
-        const colorBorder = ev.borderColor || ev.extendedProps?.borderColor || this.colors.blue.border;
-        const colorFill = ev.backgroundColor || ev.background || ev.extendedProps?.backgroundColor || colorBorder || this.colors.blue.bg;
-        const textColor = getContrastTextColor(colorFill);
-        const prev = this.courses.find(c => c.name === baseName);
-        const checked = prev ? prev.checked : true;
-        map.set(baseName, { name: baseName, colorFill: colorFill, colorBorder: colorBorder, textColor: textColor, checked });
-      }
-    });
-
-    this.courses = Array.from(map.values());
-  }
 
   goToday() {
     if (this.calendarComponent) {
@@ -1278,189 +394,25 @@ checkAllCourses() {
 
   // --- NOUVELLE MÉTHODE POUR OUVRIR LA POPUP ---
   async openEventDetails(event: any) {
-    const props = event.extendedProps || {};
-    let lastNote = (props['note'] ?? '').toString();
-    let noteChanged = false;
-
-    // Formatage de la date (ex: 18/02/25, 12:30-13:50)
-    const dateStart = event.start;
-    const dateEnd = event.end;
-    let dateStr = '';
-
-    if (dateStart && dateEnd) {
-      const day = dateStart.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-      const timeStart = dateStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      const timeEnd = dateEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      dateStr = `${day}, ${timeStart}-${timeEnd}`;
-    }
-
-    const modal = await this.modalCtrl.create({
-      component: EventDetailComponent,
-      componentProps: {
-        eventTitle: event.title,
-        dateFormatted: dateStr,
-        teacher: props['teacher'],
-        room: props['room'],
-        organism: 'FIL 1ère année', // Valeur par défaut
-        note: props['note'] || '',
-        color: event.backgroundColor || this.colors.blue.bg,
-        onNoteChange: (note: string) => {
-          if (note === lastNote) return;
-          lastNote = note;
-          noteChanged = true;
-          event.setExtendedProp('note', note);
-
-          const eventKey = getEventKey(event.title || '', event.start, event.end);
-          this.allEvents = this.allEvents.map(ev => {
-            if (ev.__key !== eventKey) return ev;
-            return {
-              ...ev,
-              extendedProps: { ...(ev.extendedProps || {}), note: note }
-            };
-          });
-        }
+    await openEventDetailsModal({
+      modalCtrl: this.modalCtrl,
+      calendarComponent: this.calendarComponent,
+      colors: this.colors,
+      colorsDaltonism: this.colorsDaltonism,
+      daltonismMode: this.daltonismMode,
+      courses: this.courses,
+      allEvents: this.allEvents,
+      customCourseColors: this.customCourseColors,
+      courseColorKeys: this.courseColorKeys,
+      onShowToast: (message: string) => this.showActionToast(message),
+      onTeacherSelected: (teacher: string) => {
+        this.selectedTeacher = teacher;
+        this.viewMode = 'teacher';
+        this.teacherQuery = '';
+        this.filteredTeachers = [...this.teachers];
+        this.applyFiltersToCalendar();
       },
-      // Classe CSS définie dans global.scss pour le style popup
-      cssClass: 'event-detail-modal',
-      backdropDismiss: true,
-      mode: 'ios'
-    });
-
-    await modal.present();
-    const res = await modal.onWillDismiss();
-
-if (res?.data?.action === 'teacher_schedule' && res.data.teacher) {
-  this.selectedTeacher = res.data.teacher;
-  this.viewMode = 'teacher';
-  this.teacherQuery = '';
-  this.filteredTeachers = [...this.teachers];
-  this.applyFiltersToCalendar();
-}
-
-const applyColorToCourse = (courseName: string, color: string) => {
-  this.customCourseColors.set(courseName, color);
-  const textColor = getContrastTextColor(color);
-  const borderColor = getAccentBorderColor(color);
-
-  if (this.calendarComponent) {
-    const api = this.calendarComponent.getApi();
-    api.getEvents().forEach(ev => {
-      const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-        if (evBase === courseName) {
-          try {
-            ev.setProp('backgroundColor', color);
-            ev.setProp('borderColor', borderColor);
-            ev.setProp('textColor', textColor);
-          } catch (err) {
-            console.error('[HomePage] Error updating event color:', err);
-          }
-        }
-    });
-  }
-
-  const course = this.courses.find(c => c.name === courseName);
-  if (course) {
-    course.colorFill = color;
-    course.colorBorder = borderColor;
-    course.textColor = textColor;
-    course.isCustomColor = true;
-  }
-
-  this.allEvents = this.allEvents.map(ev => {
-    if (ev.baseName !== courseName) return ev;
-    return {
-      ...ev,
-      backgroundColor: color,
-      borderColor: borderColor,
-      textColor: textColor,
-      customColor: false
-    };
-  });
-};
-
-const resetCourseColor = (courseName: string) => {
-  this.customCourseColors.delete(courseName);
-  const paletteSet = this.daltonismMode ? this.colorsDaltonism : this.colors;
-  const colorKey = this.courseColorKeys.get(courseName) || 'blue';
-  const palette = (paletteSet as any)[colorKey] || (paletteSet as any).blue;
-  const textColor = palette.text || getContrastTextColor(palette.bg);
-
-  if (this.calendarComponent) {
-    const api = this.calendarComponent.getApi();
-    api.getEvents().forEach(ev => {
-      const evBase = (ev.title || '').replace(/\s*\(.*\)/, '').trim();
-      if (evBase === courseName) {
-        try {
-          ev.setProp('backgroundColor', palette.bg);
-          ev.setProp('borderColor', palette.border);
-          ev.setProp('textColor', textColor);
-        } catch (err) {
-          console.error('[HomePage] Error resetting event color:', err);
-        }
-      }
-    });
-  }
-
-  this.allEvents = this.allEvents.map(ev => {
-    if (ev.baseName !== courseName) return ev;
-    return {
-      ...ev,
-      backgroundColor: palette.bg,
-      borderColor: palette.border,
-      textColor: textColor,
-      customColor: false
-    };
-  });
-
-  const course = this.courses.find(c => c.name === courseName);
-  if (course) {
-    course.colorFill = palette.bg;
-    course.colorBorder = palette.border;
-    course.textColor = textColor;
-    course.isCustomColor = false;
-  }
-};
-if ((res?.data?.action === 'color_change' || res?.data?.action === 'color_change_course') && res.data.color) {
-  const color = res.data.color as string;
-  const borderColor = getAccentBorderColor(color);
-  event.setProp('backgroundColor', color);
-  event.setProp('borderColor', borderColor);
-  event.setProp('textColor', getContrastTextColor(color));
-
-  const eventKey = getEventKey(event.title || '', event.start, event.end);
-  this.allEvents = this.allEvents.map(ev => {
-    if (ev.__key !== eventKey) return ev;
-    return {
-      ...ev,
-      backgroundColor: color,
-      borderColor: borderColor,
-      textColor: getContrastTextColor(color),
-      customColor: true
-    };
-  });
-  this.showActionToast('Couleur appliquée à ce cours.');
-}
-
-if (res?.data?.action === 'color_change_same_course' && res.data.color) {
-  const color = res.data.color as string;
-  const baseName = (event.title || '').replace(/\s*\(.*\)/, '').trim();
-  if (baseName) {
-    applyColorToCourse(baseName, color);
-  }
-  this.showActionToast('Couleur appliquée aux cours du même intitulé.');
-}
-
-if (res?.data?.action === 'color_reset') {
-  const baseName = (event.title || '').replace(/\s*\(.*\)/, '').trim();
-  if (baseName) {
-    resetCourseColor(baseName);
-  }
-  this.showActionToast('Couleur réinitialisée.');
-}
-
-if (noteChanged) {
-  this.showActionToast(lastNote.trim() ? 'Note enregistrée.' : 'Note supprimée.');
-}
-
+      setAllEvents: (events) => { this.allEvents = events; }
+    }, event);
   }
 }

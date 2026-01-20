@@ -1,0 +1,87 @@
+:host {
+  background: white;
+  --background: #ffffff;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-left: 5px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+}
+
+.room-badge {
+  --background: #eef2ff;
+  --color: #3730a3;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.room-search {
+  --background: #f9fafb;
+  --color: #111827;
+  --box-shadow: none;
+  --border-radius: 12px;
+  padding: 0;
+}
+
+.room-list {
+  max-height: 260px;
+  overflow: auto;
+  margin-top: 8px;
+  border-radius: 12px;
+}
+
+ion-list {
+  background: transparent !important;
+  padding: 0;
+}
+
+.room-item {
+  --background: transparent;
+  --padding-start: 6px;
+  --color: #111827;
+
+  ion-icon {
+    color: #6b7280;
+    margin-right: 6px;
+  }
+
+  &.active {
+    --background: #eef2ff;
+    border-radius: 10px;
+
+    ion-label {
+      font-weight: 700;
+      color: #1e40af;
+    }
+
+    ion-icon {
+      color: #1e40af;
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  :host {
+    padding: 12px;
+  }
+
+  .room-list {
+    max-height: 200px;
+  }
+}

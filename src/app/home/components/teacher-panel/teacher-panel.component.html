@@ -1,0 +1,30 @@
+<div class="filter-header">
+  <h3>Option des professeurs</h3>
+  <ion-badge *ngIf="selectedTeacher" class="room-badge">
+    {{ selectedTeacher }}
+  </ion-badge>
+</div>
+
+<ion-searchbar
+  class="room-search"
+  placeholder="Rechercher…"
+  [(ngModel)]="teacherQuery"
+  (ionInput)="onTeacherInput($event)"
+  debounce="200"
+  aria-label="Rechercher un professeur">
+</ion-searchbar>
+
+<div class="room-list">
+  <ion-list lines="none">
+    <ion-item
+      button
+      *ngFor="let t of filteredTeachers"
+      class="room-item"
+      [class.active]="t === selectedTeacher"
+      (click)="selectTeacher.emit(t)"
+    >
+      <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
+      <ion-label>{{ t }}</ion-label>
+    </ion-item>
+  </ion-list>
+</div>

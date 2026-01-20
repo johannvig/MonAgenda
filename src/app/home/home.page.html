@@ -1,32 +1,8 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar color="white">
-    <ion-title slot="start"><b>Agenda</b></ion-title>
-
-    <ion-buttons slot="end">
-  <ion-button (click)="toggleDaltonismFromHeader()" aria-label="Mode daltonisme">
-    <ion-icon name="contrast-outline" aria-hidden="true"></ion-icon>
-  </ion-button>
-  <ion-button (click)="openSettings()" aria-label="Paramètres">
-    <ion-icon name="settings-outline" aria-hidden="true"></ion-icon>
-  </ion-button>
-  <ion-button (click)="showFakeNotif()" aria-label="Afficher les notifications">
-    <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
-    <!-- badge toujours visible -->
-    <ion-badge class="notif-badge" aria-label="1 notification">1</ion-badge>
-  </ion-button>
-
-  <ion-item lines="none">
-    <ion-avatar slot="start" style="width: 30px; height: 30px;">
-      <img src="https://ionicframework.com/docs/img/demos/avatar.svg" />
-    </ion-avatar>
-    <ion-label>
-      <h2>Profil</h2>
-    </ion-label>
-  </ion-item>
-</ion-buttons>
-
-  </ion-toolbar>
-</ion-header>
+<app-home-header
+  (toggleDaltonism)="toggleDaltonismFromHeader()"
+  (openSettings)="openSettings()"
+  (showNotifications)="showFakeNotif()"
+></app-home-header>
 
 <ion-content class="bg-gray">
   <ion-grid>
@@ -34,31 +10,16 @@
 
       <!-- COLONNE GAUCHE : EMPLOI DU TEMPS -->
       <div class="calendar-col">
-
-        <div class="calendar-top-header">
-          <h2>Semaine {{ currentWeek }}</h2>
-          <div class="week-nav">
-            <ion-button class="week-nav-btn" fill="solid" size="small" (click)="prevWeek()" aria-label="Semaine précédente">
-              <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-            </ion-button>
-
-            <div class="week-nav-text">
-              Naviguer entre les semaines
-            </div>
-
-            <ion-button class="week-nav-btn" fill="solid" size="small" (click)="nextWeek()" aria-label="Semaine suivante">
-              <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-            </ion-button>
-          </div>
-          <ion-button (click)="goToday()" color="primary" shape="round">
-            Aujourd'hui
-          </ion-button>
-        </div>
+        <app-calendar-header
+          [currentWeek]="currentWeek"
+          (prevWeek)="prevWeek()"
+          (nextWeek)="nextWeek()"
+          (goToday)="goToday()"
+        ></app-calendar-header>
 
         <div class="card-white">
           <full-calendar #myCalendar [options]="calendarOptions"></full-calendar>
         </div>
-
       </div>
 
       <div
@@ -73,159 +34,44 @@
 
       <!-- COLONNE DROITE : PANNEAU -->
       <div class="side-col">
+        <app-view-switch
+          [viewMode]="viewMode"
+          (viewModeChange)="onViewModeChange($event)"
+          [selectedDate]="selectedDate"
+          (dateChange)="changeDate($event)"
+        ></app-view-switch>
 
-        <!-- Switch + Mini calendrier -->
-        <div class="card-white">
+        <app-student-panel
+          *ngIf="viewMode === 'student'"
+          class="panel-spacing"
+          [courses]="courses"
+          (openSettings)="openSettings()"
+          (checkAll)="checkAllCourses()"
+          (uncheckAll)="uncheckAllCourses()"
+          (courseToggle)="onCourseToggle($event)"
+        ></app-student-panel>
 
-          <div class="view-switch">
-            <ion-segment [(ngModel)]="viewMode" (ionChange)="onViewModeChange()">
-              <ion-segment-button value="student">
-                <ion-label>Étudiant</ion-label>
-              </ion-segment-button>
-              <ion-segment-button value="room">
-                <ion-label>Salle</ion-label>
-              </ion-segment-button>
-              <ion-segment-button value="teacher">
-                <ion-label>Professeur</ion-label>
-              </ion-segment-button>
-            </ion-segment>
-          </div>
+        <app-room-panel
+          *ngIf="viewMode === 'room'"
+          class="panel-spacing"
+          [selectedRoom]="selectedRoom"
+          [roomQuery]="roomQuery"
+          [filteredRooms]="filteredRooms"
+          (roomQueryChange)="roomQuery = $event"
+          (filterRooms)="filterRooms()"
+          (selectRoom)="selectRoom($event)"
+        ></app-room-panel>
 
-          <ion-datetime
-            presentation="date"
-            color="primary"
-            [value]="selectedDate"
-            firstDayOfWeek="1"
-            (ionChange)="changeDate($event)"
-            aria-label="Sélectionner une date">
-          </ion-datetime>
-
-        </div>
-
-        <!-- Bloc dynamique : Étudiant / Salle -->
-        <div class="card-white" style="margin-top: 15px;">
-
-          <!-- MODE ÉTUDIANT -->
-          <ng-container *ngIf="viewMode === 'student'">
-
-            <div class="filter-header">
-              <h3>Option des cours</h3>
-              <ion-button fill="clear" size="small" (click)="openSettings()" aria-label="Ouvrir les options des cours">
-                <ion-icon name="settings-outline" slot="icon-only" aria-hidden="true"></ion-icon>
-              </ion-button>
-            </div>
-
-            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-              <ion-button fill="clear" size="small" (click)="checkAllCourses()" expand="block">
-                <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-                Tout cocher
-              </ion-button>
-              <ion-button fill="clear" size="small" (click)="uncheckAllCourses()" expand="block">
-                <ion-icon name="refresh-outline" slot="start"></ion-icon>
-                Tout décocher
-              </ion-button>
-            </div>
-
-            <ion-list lines="none">
-              <ion-item
-                *ngFor="let c of courses"
-                class="course-item"
-                [ngStyle]="{
-                  '--checkbox-color': c.colorBorder || c.colorFill
-                }"
-                button
-                detail="false"
-                (click)="toggleCourseFromItem($event, c)"
-              >
-                <ion-checkbox
-                  slot="start"
-                  mode="md"
-                  [(ngModel)]="c.checked"
-                  (ionChange)="onCourseToggle(c)"
-                  class="course-checkbox"
-                  aria-label="Afficher le cours {{ c.name }}"
-                ></ion-checkbox>
-
-                <ion-label>{{ c.name }}</ion-label>
-              </ion-item>
-            </ion-list>
-
-          </ng-container>
-
-          <!-- MODE SALLE -->
-          <ng-container *ngIf="viewMode === 'room'">
-
-            <div class="filter-header">
-              <h3>Option des salles</h3>
-              <ion-badge *ngIf="selectedRoom" class="room-badge">
-                {{ selectedRoom }}
-              </ion-badge>
-            </div>
-
-            <ion-searchbar
-              class="room-search"
-              placeholder="Rechercher…"
-              [(ngModel)]="roomQuery"
-              (ionInput)="filterRooms()"
-              debounce="200"
-              aria-label="Rechercher une salle">
-            </ion-searchbar>
-
-            <div class="room-list">
-              <ion-list lines="none">
-                <ion-item
-                  button
-                  *ngFor="let r of filteredRooms"
-                  class="room-item"
-                  [class.active]="r === selectedRoom"
-                  (click)="selectRoom(r)"
-                >
-                  <ion-icon name="business-outline" slot="start" aria-hidden="true"></ion-icon>
-                  <ion-label>{{ r }}</ion-label>
-                </ion-item>
-              </ion-list>
-            </div>
-
-          </ng-container>
-
-          <!-- MODE PROFESSEUR -->
-          <ng-container *ngIf="viewMode === 'teacher'">
-
-            <div class="filter-header">
-              <h3>Option des professeurs</h3>
-              <ion-badge *ngIf="selectedTeacher" class="room-badge">
-                {{ selectedTeacher }}
-              </ion-badge>
-            </div>
-
-            <ion-searchbar
-              class="room-search"
-              placeholder="Rechercher…"
-              [(ngModel)]="teacherQuery"
-              (ionInput)="filterTeachers()"
-              debounce="200"
-              aria-label="Rechercher un professeur">
-            </ion-searchbar>
-
-            <div class="room-list">
-              <ion-list lines="none">
-                <ion-item
-                  button
-                  *ngFor="let t of filteredTeachers"
-                  class="room-item"
-                  [class.active]="t === selectedTeacher"
-                  (click)="selectTeacher(t)"
-                >
-                  <ion-icon name="person-outline" slot="start" aria-hidden="true"></ion-icon>
-                  <ion-label>{{ t }}</ion-label>
-                </ion-item>
-              </ion-list>
-            </div>
-
-          </ng-container>
-
-        </div>
-
+        <app-teacher-panel
+          *ngIf="viewMode === 'teacher'"
+          class="panel-spacing"
+          [selectedTeacher]="selectedTeacher"
+          [teacherQuery]="teacherQuery"
+          [filteredTeachers]="filteredTeachers"
+          (teacherQueryChange)="teacherQuery = $event"
+          (filterTeachers)="filterTeachers()"
+          (selectTeacher)="selectTeacher($event)"
+        ></app-teacher-panel>
       </div>
 
     </div>

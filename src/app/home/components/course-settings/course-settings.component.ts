@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import type { CourseItem, ColorKey, ColorPaletteSet } from '../../models/calendar.models';
 
 @Component({
   selector: 'app-course-settings',
@@ -11,35 +12,30 @@ import { CommonModule } from '@angular/common';
   imports: [IonicModule, FormsModule, CommonModule]
 })
 export class CourseSettingsComponent implements OnInit {
-  @Input() courses: Array<{ name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean; isCustomColor?: boolean }> = [];
+  @Input() courses: CourseItem[] = [];
   @Input() onColorChange?: (courseName: string, newColor: string) => void;
   @Input() onDaltonismToggle?: (enabled: boolean) => void;
   @Input() onResetColors?: () => void;
   @Input() daltonismMode: boolean = false;
-  @Input() courseColorKeys?: Map<string, string> = new Map();
+  @Input() courseColorKeys?: Map<string, ColorKey> = new Map();
   @Input() customCourseColors?: Map<string, string> = new Map();
-  @Input() colors: any = {};
-  @Input() colorsDaltonism: any = {};
+  @Input() colors: ColorPaletteSet | null = null;
+  @Input() colorsDaltonism: ColorPaletteSet | null = null;
   @Input() getContrastTextColor?: (hex: string) => string;
 
   // local copy so changes are not applied until Save
-  localCourses: Array<{ name: string; colorFill: string; colorBorder?: string; textColor?: string; checked: boolean; isCustomColor?: boolean }> = [];
+  localCourses: CourseItem[] = [];
   
   // Daltonisme mode
   daltonismEnabled: boolean = false;
 
-  constructor(private modalCtrl: ModalController) {
-    console.log('[CourseSettings] Constructor called, courses input:', this.courses);
-  }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
-    console.log('[CourseSettings] ngOnInit called, courses:', this.courses);
     // shallow clone
     this.localCourses = this.courses.map(c => ({ ...c }));
     // Initialize daltonismEnabled with the passed value
     this.daltonismEnabled = this.daltonismMode;
-    console.log('[CourseSettings] localCourses after map:', this.localCourses);
-    console.log('[CourseSettings] daltonismEnabled initialized to:', this.daltonismEnabled);
   }
 
   // Called when user changes a color
@@ -69,10 +65,12 @@ export class CourseSettingsComponent implements OnInit {
     }
 
     const getContrastTextColor = this.getContrastTextColor;
+    const colors = this.colors;
+    const colorsDaltonism = this.colorsDaltonism;
     
     this.localCourses.forEach(course => {
       // Récupérer la clé de couleur originale
-      const colorKey = this.courseColorKeys!.get(course.name) || 'blue';
+      const colorKey: ColorKey = this.courseColorKeys?.get(course.name) ?? 'blue';
       
       // Si daltonisme OFF: utiliser couleur perso si elle existe, sinon palette normale
       if (!this.daltonismEnabled) {
@@ -85,7 +83,7 @@ export class CourseSettingsComponent implements OnInit {
           return;
         }
         // Sinon palette normale
-        const colorObj = (this.colors as any)[colorKey];
+        const colorObj = colors[colorKey];
         if (colorObj) {
           course.colorFill = colorObj.bg;
           course.colorBorder = colorObj.border;
@@ -93,7 +91,7 @@ export class CourseSettingsComponent implements OnInit {
         }
       } else {
         // Si daltonisme ON: toujours afficher palette daltonisme (même pour perso)
-        const colorObj = (this.colorsDaltonism as any)[colorKey];
+        const colorObj = colorsDaltonism[colorKey];
         if (colorObj) {
           course.colorFill = colorObj.bg;
           course.colorBorder = colorObj.border;
@@ -114,10 +112,11 @@ export class CourseSettingsComponent implements OnInit {
     }
 
     const getContrastTextColor = this.getContrastTextColor;
+    const colors = this.colors;
 
     this.localCourses.forEach(course => {
-      const colorKey = this.courseColorKeys!.get(course.name) || 'blue';
-      const colorObj = (this.colors as any)[colorKey];
+      const colorKey: ColorKey = this.courseColorKeys?.get(course.name) ?? 'blue';
+      const colorObj = colors[colorKey];
       
       if (colorObj) {
         course.colorFill = colorObj.bg;

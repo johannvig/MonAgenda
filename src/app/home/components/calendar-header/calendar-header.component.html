@@ -1,0 +1,19 @@
+<div class="calendar-top-header">
+  <h2>Semaine {{ currentWeek }}</h2>
+  <div class="week-nav">
+    <ion-button class="week-nav-btn" fill="solid" size="small" (click)="prevWeek.emit()" aria-label="Semaine précédente">
+      <ion-icon name="chevron-back-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+    </ion-button>
+
+    <div class="week-nav-text">
+      Naviguer entre les semaines
+    </div>
+
+    <ion-button class="week-nav-btn" fill="solid" size="small" (click)="nextWeek.emit()" aria-label="Semaine suivante">
+      <ion-icon name="chevron-forward-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+    </ion-button>
+  </div>
+  <ion-button (click)="goToday.emit()" color="primary" shape="round">
+    Aujourd'hui
+  </ion-button>
+</div>

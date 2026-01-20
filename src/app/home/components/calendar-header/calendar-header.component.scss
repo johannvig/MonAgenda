@@ -1,0 +1,93 @@
+.calendar-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1f2937;
+    letter-spacing: -0.5px;
+  }
+}
+
+.week-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.08);
+}
+
+.week-nav-text {
+  color: #6b7280;
+  font-size: 0.95rem;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  padding: 0 6px;
+}
+
+.week-nav ion-button {
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --color: #374151;
+}
+
+.week-nav-btn {
+  --color: #ffffff;
+  --background: #60a5fa;
+  --background-hover: #3b82f6;
+  --background-activated: #3b82f6;
+  --border-radius: 999px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --min-height: 36px;
+  --min-width: 36px;
+}
+
+@media (max-width: 992px) {
+  .calendar-top-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .week-nav {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 600px) {
+  .calendar-top-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .calendar-top-header {
+    align-items: stretch;
+  }
+
+  .week-nav {
+    width: 100%;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .week-nav-text {
+    font-size: 0.85rem;
+  }
+
+  .calendar-top-header ion-button[color="primary"] {
+    width: 100%;
+    justify-content: center;
+  }
+}

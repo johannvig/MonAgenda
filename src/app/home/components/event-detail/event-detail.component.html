@@ -1,0 +1,100 @@
+<div class="custom-modal-card">
+  <div class="header-strip" [style.background-color]="color"></div>
+
+  <div class="card-content">
+    <div class="card-header">
+      <div class="title">{{ eventTitle }}</div>
+      <button class="close-icon" type="button" (click)="close()" aria-label="Fermer la fiche">
+        <ion-icon name="close" aria-hidden="true"></ion-icon>
+      </button>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="info-row" *ngIf="dateFormatted">
+      <span class="label">DATE</span>
+      <span class="data">{{ dateFormatted }}</span>
+    </div>
+
+    <div class="info-row" *ngIf="teacher">
+      <span class="label">PROFESSEUR</span>
+      <button class="teacher-link" type="button" (click)="openTeacherSchedule()">
+        {{ teacher }}
+      </button>
+    </div>
+
+    <div class="info-row" *ngIf="room">
+      <span class="label">LIEU</span>
+      <span class="data">{{ room }}</span>
+    </div>
+
+    <div class="info-row" *ngIf="organism">
+      <span class="label">CLASSE</span>
+      <span class="data">{{ organism }}</span>
+    </div>
+
+    <div class="separator-light"></div>
+
+    <ion-accordion-group class="detail-accordion">
+      <ion-accordion value="color">
+        <ion-item slot="header" lines="none">
+          <ion-label>Couleur</ion-label>
+        </ion-item>
+        <div slot="content" class="accordion-content">
+          <div class="color-control">
+            <input
+              class="color-input"
+              type="color"
+              [value]="selectedColor"
+              (input)="onColorInput($event)"
+              aria-label="Choisir une couleur"
+            />
+            <ion-button class="color-reset" fill="clear" size="small" (click)="resetColor()" aria-label="Réinitialiser la couleur">
+              <ion-icon name="refresh-circle-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </div>
+          <div class="color-actions">
+            <ion-button size="small" color="primary" (click)="requestCourseApply()" [disabled]="!hasColorChange">
+              Appliquer à ce cours
+            </ion-button>
+            <ion-button size="small" color="primary" (click)="requestSameCourseApply()" [disabled]="!hasColorChange">
+              Appliquer à tous les cours
+            </ion-button>
+          </div>
+        </div>
+      </ion-accordion>
+
+      <ion-card class="confirm-card" *ngIf="showCourseConfirm">
+        <ion-card-content>
+          <div class="confirm-text">Voulez-vous vraiment changer la couleur de ce cours&nbsp;?</div>
+          <div class="confirm-actions">
+            <ion-button size="small" color="primary" (click)="confirmCourseApply()">Oui</ion-button>
+            <ion-button size="small" fill="clear" (click)="cancelCourseApply()">Annuler</ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="confirm-card" *ngIf="showSameCourseConfirm">
+        <ion-card-content>
+          <div class="confirm-text">Voulez-vous vraiment changer la couleur de tous les cours du même intitulé&nbsp;?</div>
+          <div class="confirm-actions">
+            <ion-button size="small" color="primary" (click)="confirmSameCourseApply()">Oui</ion-button>
+            <ion-button size="small" fill="clear" (click)="cancelCourseApply()">Annuler</ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ion-accordion-group>
+
+    <div class="note-section">
+      <span class="label">NOTE</span>
+      <ion-textarea
+        class="note-input"
+        [value]="noteValue"
+        (ionInput)="onNoteInput($event)"
+        autoGrow="true"
+        placeholder="Ajouter une note..."
+        aria-label="Ajouter une note">
+      </ion-textarea>
+    </div>
+  </div>
+</div>
