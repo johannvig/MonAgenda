@@ -35,7 +35,7 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
-@import "./app/home/global.scss";
+@use "./app/home/global.scss";
 
 .action-toast {
   --background: #111827;
